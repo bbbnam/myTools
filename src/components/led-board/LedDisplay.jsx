@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import './LedDisplay.css';
 
 // LED 컬러 테마 정의
