@@ -1,0 +1,36 @@
+.led-page {
+  min-height: calc(100vh - var(--nav-height));
+  padding: var(--page-padding);
+  padding-bottom: calc(var(--nav-height) + 20px);
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.led-page__header {
+  padding-top: 12px;
+}
+
+.led-page__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.led-page__sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.led-page__preview {
+  /* sticky preview on desktop */
+}
+
+.led-page__controls {
+  /* controls section */
+}

@@ -1,0 +1,213 @@
+.led-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Section ── */
+.ctrl-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ctrl-section--row {
+  flex-direction: row;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ctrl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* ── Textarea ── */
+.ctrl-textarea {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  -webkit-appearance: none;
+}
+
+.ctrl-textarea:focus {
+  border-color: var(--accent-led);
+}
+
+.ctrl-textarea::placeholder {
+  color: var(--text-dim);
+}
+
+.ctrl-textarea-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -6px;
+}
+
+.ctrl-charcount {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.start-btn {
+  padding: 6px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--accent-led);
+  color: #fff;
+  border: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.start-btn:disabled {
+  opacity: 0.35;
+}
+
+.start-btn:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+/* ── Color Swatches ── */
+.ctrl-colors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 2px solid transparent;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 12px var(--swatch-glow);
+}
+
+.color-swatch--active {
+  border-color: #fff;
+  box-shadow: 0 0 16px var(--swatch-glow);
+  transform: scale(1.1);
+}
+
+/* ── Chips ── */
+.ctrl-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-fast);
+}
+
+.chip:hover {
+  color: var(--text-primary);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.chip--active {
+  background: var(--accent-led);
+  color: #fff;
+  border-color: var(--accent-led);
+  font-weight: 700;
+}
+
+/* ── Toggle ── */
+.ctrl-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-btn {
+  width: 48px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+  transition: background var(--transition-med), border-color var(--transition-med);
+  flex-shrink: 0;
+}
+
+.toggle-btn--on {
+  background: var(--accent-led);
+  border-color: var(--accent-led);
+}
+
+.toggle-btn__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition-med);
+  display: block;
+}
+
+.toggle-btn--on .toggle-btn__knob {
+  transform: translateX(22px);
+}
+
+.ctrl-speed-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Fullscreen Button ── */
+.fullscreen-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--accent-led);
+  color: var(--accent-led);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: all var(--transition-fast);
+  margin-top: 4px;
+}
+
+.fullscreen-btn:hover {
+  background: var(--accent-led);
+  color: #fff;
+}
+
+.fullscreen-btn span {
+  font-size: 18px;
+}

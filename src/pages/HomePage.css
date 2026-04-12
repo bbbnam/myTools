@@ -1,0 +1,102 @@
+.home-page {
+  min-height: calc(100vh - var(--nav-height));
+  padding: var(--page-padding);
+  padding-bottom: calc(var(--nav-height) + 20px);
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.home-page__header {
+  padding-top: 32px;
+}
+
+.home-page__logo {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #ffffff 0%, #888888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.home-page__tagline {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.home-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Menu Card ── */
+.menu-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  transition: all var(--transition-fast);
+  color: var(--text-primary);
+}
+
+.menu-card:hover {
+  border-color: var(--accent-led);
+  background: var(--bg-hover);
+  transform: translateX(4px);
+}
+
+.menu-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.menu-card__icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.menu-card__label {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.menu-card__desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.menu-card__arrow {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 18px;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.menu-card:hover .menu-card__arrow {
+  color: var(--accent-led);
+  transform: translateX(4px);
+}
+
+.menu-card__badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-dim);
+}

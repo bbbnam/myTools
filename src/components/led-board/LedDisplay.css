@@ -1,0 +1,118 @@
+/* ==========================================
+   LED Display Component
+   ========================================== */
+
+.led-display {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 6;
+  min-height: 160px;
+  background: #050505;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Outer glow matching LED color */
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 0 40px -10px var(--led-glow),
+    inset 0 0 60px rgba(0,0,0,0.8);
+}
+
+/* CRT scanlines */
+.led-display__scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Dot matrix overlay */
+.led-display__dots {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(0,0,0,0.4) 1px, transparent 1px);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Text stage */
+.led-display__stage {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+/* Static centered text */
+.led-display__static {
+  width: 100%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--led-color);
+  letter-spacing: 0.05em;
+  text-shadow:
+    0 0 10px var(--led-glow),
+    0 0 30px var(--led-glow),
+    0 0 60px var(--led-glow);
+  padding: 0 16px;
+  line-height: 1.2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+/* Scrolling ticker */
+.led-display__ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: led-scroll linear infinite;
+  will-change: transform;
+}
+
+.led-display__ticker span {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--led-color);
+  letter-spacing: 0.05em;
+  text-shadow:
+    0 0 10px var(--led-glow),
+    0 0 30px var(--led-glow),
+    0 0 60px var(--led-glow);
+}
+
+@keyframes led-scroll {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Corner brackets */
+.led-display__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--led-color);
+  border-style: solid;
+  opacity: 0.6;
+  z-index: 5;
+}
+.led-display__corner--tl { top: 8px;    left: 8px;    border-width: 2px 0 0 2px; }
+.led-display__corner--tr { top: 8px;    right: 8px;   border-width: 2px 2px 0 0; }
+.led-display__corner--bl { bottom: 8px; left: 8px;    border-width: 0 0 2px 2px; }
+.led-display__corner--br { bottom: 8px; right: 8px;   border-width: 0 2px 2px 0; }

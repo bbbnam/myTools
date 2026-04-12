@@ -1,0 +1,84 @@
+/* ==========================================
+   Global Styles & Design Tokens
+   ========================================== */
+:root {
+  /* Colors */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #161616;
+  --bg-hover: #1e1e1e;
+
+  --accent-led: #ff3d00;
+  --accent-led-glow: rgba(255, 61, 0, 0.6);
+  --accent-green: #00ff88;
+  --accent-green-glow: rgba(0, 255, 136, 0.5);
+  --accent-blue: #0099ff;
+
+  --text-primary: #f0f0f0;
+  --text-secondary: #888888;
+  --text-dim: #444444;
+
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-active: rgba(255, 61, 0, 0.4);
+
+  /* Typography */
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Noto Sans KR', sans-serif;
+
+  /* Spacing */
+  --nav-height: 60px;
+  --page-padding: 20px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-med: 300ms ease;
+}
+
+/* Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-dim);
+  border-radius: 2px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+}
+
+input, textarea {
+  font-family: var(--font-body);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
