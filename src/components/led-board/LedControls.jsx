@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LED_COLORS, SPEEDS, FONT_SIZES } from './LedDisplay';
+import { LED_COLORS, SPEEDS, FONT_SIZES, FONTS } from './LedDisplay';
 import './LedControls.css';
 
 export default function LedControls({
@@ -7,6 +7,7 @@ export default function LedControls({
   colorId, setColorId,
   speedId, setSpeedId,
   fontSizeId, setFontSizeId,
+  fontId, setFontId,
   isScrolling, setIsScrolling,
   onFullscreen,
 }) {
@@ -67,6 +68,23 @@ export default function LedControls({
               key={f.id}
               className={`chip ${fontSizeId === f.id ? 'chip--active' : ''}`}
               onClick={() => setFontSizeId(f.id)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 폰트 */}
+      <div className="ctrl-section">
+        <label className="ctrl-label">폰트</label>
+        <div className="ctrl-chips">
+          {FONTS.map(f => (
+            <button
+              key={f.id}
+              className={`chip ${fontId === f.id ? 'chip--active' : ''}`}
+              style={{ fontFamily: f.family }}
+              onClick={() => setFontId(f.id)}
             >
               {f.label}
             </button>

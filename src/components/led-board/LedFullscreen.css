@@ -1,9 +1,10 @@
 .led-fullscreen {
   position: fixed;
   inset: 0;
-  background: #000;
+  background: #050505;
   z-index: 999;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   animation: fs-in 200ms ease forwards;
@@ -14,32 +15,73 @@
   to   { opacity: 1; }
 }
 
-.led-fullscreen__inner {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 24px;
+/* CRT scanlines */
+.led-fullscreen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.12) 2px,
+    rgba(0,0,0,0.12) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
-.led-fullscreen__inner .led-display {
-  aspect-ratio: 16 / 5;
-  max-height: 60vh;
+.led-fullscreen__stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.led-fullscreen__text {
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  white-space: pre;
+  padding: 0 24px;
+}
+
+.led-fullscreen__ticker {
+  display: inline-block;
+  white-space: nowrap;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: fs-scroll linear infinite;
+  will-change: transform;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes fs-scroll {
+  0%   { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
 }
 
 .led-fullscreen__close {
-  padding: 10px 28px;
+  position: relative;
+  z-index: 2;
+  padding: 12px 36px;
+  margin-bottom: 32px;
   border-radius: 24px;
   border: 1px solid rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.5);
-  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  font-size: 14px;
   letter-spacing: 0.08em;
   transition: all 150ms ease;
   background: transparent;
 }
 
-.led-fullscreen__close:hover {
+.led-fullscreen__close:active {
   color: #fff;
   border-color: rgba(255,255,255,0.6);
 }

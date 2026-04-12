@@ -22,6 +22,7 @@ const defaults = {
   colorId:    'red',
   speedId:    'normal',
   fontSizeId: 'md',
+  fontId:     'orbitron',
   isScrolling: true,
 };
 
@@ -32,6 +33,7 @@ export function useLedBoard() {
   const [colorId,     setColorId]     = useState(saved?.colorId     ?? defaults.colorId);
   const [speedId,     setSpeedId]     = useState(saved?.speedId     ?? defaults.speedId);
   const [fontSizeId,  setFontSizeId]  = useState(saved?.fontSizeId  ?? defaults.fontSizeId);
+  const [fontId,      setFontId]      = useState(saved?.fontId      ?? defaults.fontId);
   const [isScrolling, setIsScrolling] = useState(saved?.isScrolling ?? defaults.isScrolling);
   const [fullscreen,  setFullscreen]  = useState(false);
 
@@ -39,7 +41,7 @@ export function useLedBoard() {
   const makeUpdater = (setter, key) => (value) => {
     setter(prev => {
       const next = typeof value === 'function' ? value(prev) : value;
-      saveState({ text, colorId, speedId, fontSizeId, isScrolling, [key]: next });
+      saveState({ text, colorId, speedId, fontSizeId, fontId, isScrolling, [key]: next });
       return next;
     });
   };
@@ -49,6 +51,7 @@ export function useLedBoard() {
     colorId,     setColorId:     makeUpdater(setColorId, 'colorId'),
     speedId,     setSpeedId:     makeUpdater(setSpeedId, 'speedId'),
     fontSizeId,  setFontSizeId:  makeUpdater(setFontSizeId, 'fontSizeId'),
+    fontId,      setFontId:      makeUpdater(setFontId, 'fontId'),
     isScrolling, setIsScrolling: makeUpdater(setIsScrolling, 'isScrolling'),
     fullscreen,  setFullscreen,
   };

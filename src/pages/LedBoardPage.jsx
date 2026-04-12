@@ -11,11 +11,12 @@ export default function LedBoardPage() {
     colorId, setColorId,
     speedId, setSpeedId,
     fontSizeId, setFontSizeId,
+    fontId, setFontId,
     isScrolling, setIsScrolling,
     fullscreen, setFullscreen,
   } = useLedBoard();
 
-  const displayProps = { text, colorId, speedId, fontSizeId, isScrolling };
+  const displayProps = { text, colorId, speedId, fontSizeId, fontId, isScrolling };
 
   return (
     <div className="led-page">
@@ -37,6 +38,7 @@ export default function LedBoardPage() {
           setColorId={setColorId}
           setSpeedId={setSpeedId}
           setFontSizeId={setFontSizeId}
+          setFontId={setFontId}
           setIsScrolling={setIsScrolling}
           onFullscreen={() => setFullscreen(true)}
         />

@@ -1,6 +1,16 @@
 import React from 'react';
 import './LedDisplay.css';
 
+// 폰트 테마 정의
+export const FONTS = [
+  { id: 'orbitron',   label: '디지털',    family: "'Orbitron', monospace" },
+  { id: 'noto',       label: '기본',      family: "'Noto Sans KR', sans-serif" },
+  { id: 'blackhan',   label: '굵은한글',  family: "'Black Han Sans', sans-serif" },
+  { id: 'jua',        label: '주아',      family: "'Jua', sans-serif" },
+  { id: 'sharetech',  label: '모노',      family: "'Share Tech Mono', monospace" },
+  { id: 'vt323',      label: '레트로',    family: "'VT323', monospace" },
+];
+
 // LED 컬러 테마 정의
 export const LED_COLORS = [
   { id: 'red',    label: '빨강', color: '#ff3d00', glow: 'rgba(255,61,0,0.7)' },
@@ -24,10 +34,11 @@ export const FONT_SIZES = [
   { id: 'xl', label: '초대형', px: 160 },
 ];
 
-export default function LedDisplay({ text, colorId, speedId, fontSizeId, isScrolling }) {
-  const color  = LED_COLORS.find(c => c.id === colorId)  || LED_COLORS[0];
-  const speed  = SPEEDS.find(s => s.id === speedId)       || SPEEDS[1];
+export default function LedDisplay({ text, colorId, speedId, fontSizeId, fontId, isScrolling }) {
+  const color  = LED_COLORS.find(c => c.id === colorId)   || LED_COLORS[0];
+  const speed  = SPEEDS.find(s => s.id === speedId)        || SPEEDS[1];
   const size   = FONT_SIZES.find(f => f.id === fontSizeId) || FONT_SIZES[1];
+  const font   = FONTS.find(f => f.id === fontId)          || FONTS[0];
 
   const rawText = text.trim() || '텍스트를 입력하세요';
   const scrollText = rawText.replace(/\n+/g, '   ·   ');
@@ -49,6 +60,7 @@ export default function LedDisplay({ text, colorId, speedId, fontSizeId, isScrol
             style={{
               fontSize: `${size.px}px`,
               animationDuration: `${speed.duration}s`,
+              fontFamily: font.family,
             }}
           >
             <span>{scrollText}</span>
@@ -56,7 +68,7 @@ export default function LedDisplay({ text, colorId, speedId, fontSizeId, isScrol
         ) : (
           <div
             className="led-display__static"
-            style={{ fontSize: `${size.px}px` }}
+            style={{ fontSize: `${size.px}px`, fontFamily: font.family }}
           >
             {staticLines.map((line, i) => (
               <React.Fragment key={i}>

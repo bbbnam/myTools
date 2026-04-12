@@ -73,8 +73,7 @@
     0 0 60px var(--led-glow);
   padding: 0 16px;
   line-height: 1.2;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
   overflow: hidden;
 }
 
