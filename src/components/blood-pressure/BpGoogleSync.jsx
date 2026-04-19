@@ -47,6 +47,13 @@ export default function BpGoogleSync({
               >
                 {syncing ? '생성 중...' : '📄 스프레드시트 자동 생성'}
               </button>
+              {/* ── 연결 해제 버튼 추가 ── */}
+              <button
+                className="bp-sync__btn bp-sync__btn--logout"
+                onClick={logout}
+              >
+                연결 해제
+              </button>
             </div>
           ) : (
             /* ── 시트 있음 → 동기화 버튼들 ── */
