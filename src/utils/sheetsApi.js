@@ -2,7 +2,6 @@
 
 import { getValidAccessToken } from './googleAuth';
 
-const DRIVE_BASE = 'https://www.googleapis.com/drive/v3';
 const SPREADSHEET_TITLE = 'MyTools 혈압기록';
 const SHEET_NAME = '혈압기록';
 const HEADERS = ['날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
