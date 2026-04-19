@@ -18,35 +18,16 @@ function saveLocal(records) {
 const SHEET_ID_KEY = 'bp_spreadsheet_id';
 
 export function useBloodPressure() {
-  const [records, setRecords]           = useState(loadLocal);
-  const [tokens, setTokens]             = useState(loadTokens);
+  const [records, setRecords]             = useState(loadLocal);
+  const [tokens, setTokens]               = useState(loadTokens);
   const [spreadsheetId, setSpreadsheetId] = useState(
     () => localStorage.getItem(SHEET_ID_KEY) || ''
   );
-  const [syncing, setSyncing]   = useState(false);
+  const [syncing, setSyncing]     = useState(false);
   const [syncError, setSyncError] = useState('');
-  const [syncOk, setSyncOk]     = useState(false);
+  const [syncOk, setSyncOk]       = useState(false);
 
   // OAuth 콜백으로 돌아왔을 때 URL 파라미터 처리
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const at = params.get('access_token');
-    const rt = params.get('refresh_token');
-    const ei = params.get('expires_in');
-    if (at) {
-      const t = { access_token: at, refresh_token: rt, expires_in: ei };
-      saveTokens(t);
-      setTokens(loadTokens());
-      // URL 정리
-      window.history.replaceState({}, '', '/bp');
-    }
-  }, []);
-
-  // Spreadsheet ID 저장
-  useEffect(() => {
-    if (spreadsheetId) localStorage.setItem(SHEET_ID_KEY, spreadsheetId);
-  }, [spreadsheetId]);
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const at = params.get('access_token');
@@ -66,9 +47,30 @@ export function useBloodPressure() {
             localStorage.setItem(SHEET_ID_KEY, id);
           }
         })
-        .catch(() => {}); // 검색 실패해도 무시 (수동 생성으로 fallback)
+        .catch(() => {});
     }
   }, []);
+
+  // 토큰은 있는데 spreadsheetId가 없을 때 → 자동 검색
+  // (다른 기기에서 접속하거나 localStorage가 초기화된 경우)
+  useEffect(() => {
+    const currentTokens = loadTokens();
+    if (currentTokens && !spreadsheetId) {
+      findExistingSpreadsheet()
+        .then(id => {
+          if (id) {
+            setSpreadsheetId(id);
+            localStorage.setItem(SHEET_ID_KEY, id);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [tokens]); // tokens 바뀔 때마다 실행
+
+  // Spreadsheet ID 저장
+  useEffect(() => {
+    if (spreadsheetId) localStorage.setItem(SHEET_ID_KEY, spreadsheetId);
+  }, [spreadsheetId]);
 
   // 기록 추가
   const addRecord = useCallback(async (form) => {
@@ -115,7 +117,6 @@ export function useBloodPressure() {
     setSyncError('');
     try {
       const remote = await readAllRecords(spreadsheetId);
-      // 로컬 + 원격 머지 (date+time 기준 중복 제거)
       const all = [...remote];
       const keys = new Set(remote.map(r => `${r.date}_${r.time}`));
       for (const r of records) {
@@ -167,7 +168,12 @@ export function useBloodPressure() {
   }, []);
 
   const login = () => { window.location.href = buildOAuthUrl(); };
-  const logout = () => { clearTokens(); setTokens(null); };
+  const logout = () => {
+    clearTokens();
+    setTokens(null);
+    setSpreadsheetId('');
+    localStorage.removeItem(SHEET_ID_KEY);
+  };
 
   return {
     records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
