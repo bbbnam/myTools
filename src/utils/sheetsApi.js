@@ -2,6 +2,8 @@
 
 import { getValidAccessToken } from './googleAuth';
 
+const DRIVE_BASE = 'https://www.googleapis.com/drive/v3';
+const SPREADSHEET_TITLE = 'MyTools 혈압기록';
 const SHEET_NAME = '혈압기록';
 const HEADERS = ['날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
 
@@ -115,4 +117,40 @@ export async function uploadAllRecords(spreadsheetId, records) {
     range: `${SHEET_NAME}!A:I`,
     values: rows,
   });
+}
+
+// 스프레드시트 자동 생성 + 시트 이름 + 헤더 세팅
+export async function createAndInitSpreadsheet() {
+  const token = await getValidAccessToken();
+  const authHeader = `Bearer ${token}`;
+
+  // 1. 스프레드시트 생성 (시트 이름도 동시에 지정)
+  const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      properties: { title: SPREADSHEET_TITLE },
+      sheets: [{
+        properties: { title: SHEET_NAME }  // "혈압기록"
+      }]
+    }),
+  });
+
+  const created = await createRes.json();
+  if (!createRes.ok) throw new Error(created.error?.message || '스프레드시트 생성 실패');
+
+  const spreadsheetId = created.spreadsheetId;
+
+  // 2. 헤더 삽입
+  await callProxy({
+    action: 'append',
+    spreadsheetId,
+    range: `${SHEET_NAME}!A1`,
+    values: [HEADERS],
+  });
+
+  return spreadsheetId;
 }

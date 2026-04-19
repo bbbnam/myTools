@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { classifyBP, todayStr, nowTimeStr } from '../utils/bpClassify';
-import { appendRecord, readAllRecords, uploadAllRecords } from '../utils/sheetsApi';
+import { appendRecord, readAllRecords, uploadAllRecords, createAndInitSpreadsheet } from '../utils/sheetsApi';
 import { loadTokens, saveTokens, clearTokens, buildOAuthUrl } from '../utils/googleAuth';
 
 const LOCAL_KEY = 'bp_records';
@@ -110,27 +110,44 @@ export function useBloodPressure() {
     }
   }, [tokens, spreadsheetId, records]);
 
-const pushAllToSheets = useCallback(async () => {
-  if (!tokens || !spreadsheetId) return;
-  if (records.length === 0) return;
-  setSyncing(true);
-  setSyncError('');
-  try {
-    await uploadAllRecords(spreadsheetId, records);
-    setSyncOk(true);
-    setTimeout(() => setSyncOk(false), 2500);
-  } catch (e) {
-    setSyncError('업로드 실패: ' + e.message);
-  } finally {
-    setSyncing(false);
-  }
-}, [tokens, spreadsheetId, records]);
+  const pushAllToSheets = useCallback(async () => {
+    if (!tokens || !spreadsheetId) return;
+    if (records.length === 0) return;
+    setSyncing(true);
+    setSyncError('');
+    try {
+      await uploadAllRecords(spreadsheetId, records);
+      setSyncOk(true);
+      setTimeout(() => setSyncOk(false), 2500);
+    } catch (e) {
+      setSyncError('업로드 실패: ' + e.message);
+    } finally {
+      setSyncing(false);
+    }
+  }, [tokens, spreadsheetId, records]);
+
+  // 스프레드시트 자동 생성
+  const createSpreadsheet = useCallback(async () => {
+    setSyncing(true);
+    setSyncError('');
+    try {
+      const id = await createAndInitSpreadsheet();
+      setSpreadsheetId(id);
+      localStorage.setItem(SHEET_ID_KEY, id);
+      setSyncOk(true);
+      setTimeout(() => setSyncOk(false), 2500);
+    } catch (e) {
+      setSyncError('생성 실패: ' + e.message);
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
 
   const login = () => { window.location.href = buildOAuthUrl(); };
   const logout = () => { clearTokens(); setTokens(null); };
 
   return {
-    records, addRecord, pullFromSheets, pushAllToSheets,
+    records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
     syncing, syncError, syncOk,

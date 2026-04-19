@@ -20,7 +20,7 @@ export default function BloodPressurePage() {
   const [saving, setSaving] = useState(false);
 
   const {
-    records, addRecord, pullFromSheets, pushAllToSheets,
+    records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
     syncing, syncError, syncOk,
@@ -76,6 +76,7 @@ export default function BloodPressurePage() {
             spreadsheetId={spreadsheetId} setSpreadsheetId={setSpreadsheetId}
             onPull={pullFromSheets}
             onPushAll={pushAllToSheets}
+            onCreateSheet={createSpreadsheet}
             recordCount={records.length}
             syncing={syncing} syncError={syncError} syncOk={syncOk}
           />

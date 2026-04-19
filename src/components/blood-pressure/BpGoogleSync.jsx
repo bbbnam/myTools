@@ -1,14 +1,13 @@
 // src/components/blood-pressure/BpGoogleSync.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import './BpGoogleSync.css';
 
 export default function BpGoogleSync({
   tokens, login, logout,
   spreadsheetId, setSpreadsheetId,
-  onPull, onPushAll, recordCount,
+  onPull, onPushAll, onCreateSheet, recordCount,
   syncing, syncError, syncOk,
 }) {
-  const [showHelp, setShowHelp] = useState(false);
   const isConnected = !!tokens;
 
   return (
@@ -33,54 +32,56 @@ export default function BpGoogleSync({
         </div>
       ) : (
         <div className="bp-sync__connected-area">
-          {/* Spreadsheet ID 입력 */}
-          <label className="bp-sync__label">
-            스프레드시트 ID
-            <button className="bp-sync__help-btn" onClick={() => setShowHelp(v => !v)}>
-              ?
-            </button>
-          </label>
 
-          {showHelp && (
-            <div className="bp-sync__help">
-              <p>① <a href="https://sheets.google.com" target="_blank" rel="noreferrer">sheets.google.com</a> 에서 새 스프레드시트 생성</p>
-              <p>② URL에서 ID 복사:</p>
-              <code>docs.google.com/spreadsheets/d/<mark>여기가 ID</mark>/edit</code>
-              <p>③ 아래 칸에 붙여넣기</p>
-            </div>
-          )}
-
-          <input
-            className="bp-sync__input"
-            type="text"
-            placeholder="예) 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
-            value={spreadsheetId}
-            onChange={e => setSpreadsheetId(e.target.value.trim())}
-          />
-
-          {/* 액션 버튼 */}
-          <div className="bp-sync__actions">
-            <button
-              className="bp-sync__btn bp-sync__btn--pull"
-              onClick={onPull}
-              disabled={syncing || !spreadsheetId}
-            >
-              {syncing ? '동기화 중...' : '☁ Sheets에서 불러오기'}
-            </button>
-            <button
-                className="bp-sync__btn bp-sync__btn--push"
-                onClick={onPushAll}
-                disabled={syncing || !spreadsheetId || recordCount === 0}
+          {!spreadsheetId ? (
+            /* ── 시트 없음 → 자동 생성 안내 ── */
+            <div className="bp-sync__create-area">
+              <p className="bp-sync__desc">
+                버튼을 누르면 Google Drive에 <b>"MyTools 혈압기록"</b> 스프레드시트가
+                자동으로 생성됩니다.
+              </p>
+              <button
+                className="bp-sync__btn bp-sync__btn--create"
+                onClick={onCreateSheet}
+                disabled={syncing}
               >
-                ↑ 로컬 전체 업로드 ({recordCount}건)
-            </button>
-            <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
-              연결 해제
-            </button>
-          </div>
+                {syncing ? '생성 중...' : '📄 스프레드시트 자동 생성'}
+              </button>
+            </div>
+          ) : (
+            /* ── 시트 있음 → 동기화 버튼들 ── */
+            <>
+              <label className="bp-sync__label">연결된 스프레드시트</label>
+              <div className="bp-sync__sheet-id">{spreadsheetId}</div>
+
+              <div className="bp-sync__actions">
+                <button
+                  className="bp-sync__btn bp-sync__btn--pull"
+                  onClick={onPull}
+                  disabled={syncing}
+                >
+                  {syncing ? '동기화 중...' : '☁ Sheets에서 불러오기'}
+                </button>
+                <button
+                  className="bp-sync__btn bp-sync__btn--push"
+                  onClick={onPushAll}
+                  disabled={syncing || recordCount === 0}
+                >
+                  ↑ 로컬 전체 업로드 ({recordCount}건)
+                </button>
+                <button
+                  className="bp-sync__btn bp-sync__btn--logout"
+                  onClick={logout}
+                >
+                  연결 해제
+                </button>
+              </div>
+            </>
+          )}
 
           {syncOk    && <p className="bp-sync__ok">✓ 동기화 완료!</p>}
           {syncError && <p className="bp-sync__err">{syncError}</p>}
+
         </div>
       )}
     </div>

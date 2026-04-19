@@ -185,6 +185,38 @@
   cursor: not-allowed;
 }
 
+.bp-sync__create-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bp-sync__btn--create {
+  background: rgba(66, 133, 244, 0.15);
+  color: #64b5f6;
+  border: 1px solid rgba(66, 133, 244, 0.3);
+  width: 100%;
+}
+
+.bp-sync__btn--create:hover:not(:disabled) {
+  background: rgba(66, 133, 244, 0.25);
+}
+
+.bp-sync__btn--create:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bp-sync__sheet-id {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-dim);
+  background: var(--bg-secondary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  word-break: break-all;
+}
+
 .bp-sync__btn--logout {
   background: transparent;
   color: var(--text-dim);
