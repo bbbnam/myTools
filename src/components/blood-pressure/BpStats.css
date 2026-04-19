@@ -1,0 +1,65 @@
+.bp-stats__level {
+  background: var(--bg-card);
+  border: 1px solid var(--level-color, #444);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 0 20px -8px var(--level-glow, transparent);
+}
+
+.bp-stats__level-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.bp-stats__level-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--level-color);
+}
+
+.bp-stats__level-value {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.bp-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.bp-stats__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.bp-stats__card-val {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bp-stats__card-unit {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.bp-stats__card-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}

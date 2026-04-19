@@ -1,0 +1,132 @@
+.bp-input {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bp-input__title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.bp-input__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bp-input__label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.bp-input__label--full {
+  grid-column: 1 / -1;
+}
+
+.bp-input__unit {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bp-input__field {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 15px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 150ms ease;
+  width: 100%;
+  -webkit-appearance: none;
+}
+
+.bp-input__field:focus {
+  border-color: #e53935;
+}
+
+.bp-input__field--num {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.bp-input__field--err {
+  border-color: #d50000 !important;
+}
+
+.bp-input__err {
+  font-size: 10px;
+  color: #ff5252;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bp-input__slot-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.slot-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  transition: all 150ms ease;
+  text-align: center;
+}
+
+.slot-btn--active {
+  background: rgba(229, 57, 53, 0.15);
+  border-color: #e53935;
+  color: #ef9a9a;
+  font-weight: 700;
+}
+
+.bp-input__submit {
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #e53935;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: all 150ms ease;
+  border: none;
+}
+
+.bp-input__submit:hover:not(:disabled) {
+  background: #c62828;
+}
+
+.bp-input__submit:disabled {
+  opacity: 0.5;
+}
