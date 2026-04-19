@@ -23,7 +23,7 @@ export default function BloodPressurePage() {
     records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
-    syncing, syncError, syncOk,
+    syncing, syncError, syncOk, hasUnsynced
   } = useBloodPressure();
 
   const handleSubmit = async (form) => {
@@ -79,6 +79,7 @@ export default function BloodPressurePage() {
             onCreateSheet={createSpreadsheet}
             recordCount={records.length}
             syncing={syncing} syncError={syncError} syncOk={syncOk}
+            hasUnsynced={hasUnsynced}
           />
         )}
       </div>

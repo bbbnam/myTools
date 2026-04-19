@@ -7,6 +7,7 @@ export default function BpGoogleSync({
   spreadsheetId, setSpreadsheetId,
   onPull, onPushAll, onCreateSheet, recordCount,
   syncing, syncError, syncOk,
+  hasUnsynced,
 }) {
   const isConnected = !!tokens;
 
@@ -80,9 +81,9 @@ export default function BpGoogleSync({
                 <button
                   className="bp-sync__btn bp-sync__btn--push"
                   onClick={onPushAll}
-                  disabled={syncing || recordCount === 0}
+                  disabled={syncing || !hasUnsynced}
                 >
-                  ↑ 로컬 전체 업로드 ({recordCount}건)
+                  {hasUnsynced ? `↑ 로컬 전체 업로드 (${recordCount}건)` : '✓ 모두 동기화됨'}
                 </button>
                 <button
                   className="bp-sync__btn bp-sync__btn--logout"
