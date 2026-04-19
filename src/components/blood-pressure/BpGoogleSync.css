@@ -217,6 +217,16 @@
   word-break: break-all;
 }
 
+.bp-sync__warning {
+  font-size: 11px;
+  color: #ffb74d;
+  background: rgba(255, 183, 77, 0.08);
+  border: 1px solid rgba(255, 183, 77, 0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+
 .bp-sync__btn--logout {
   background: transparent;
   color: var(--text-dim);

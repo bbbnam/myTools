@@ -3,7 +3,6 @@
 import { getValidAccessToken } from './googleAuth';
 
 const SPREADSHEET_TITLE = 'MyTools 혈압기록';
-const SHEET_NAME = '혈압기록';
 const HEADERS = ['날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
 
 async function callProxy(body) {
@@ -24,28 +23,23 @@ async function callProxy(body) {
 // 시트 초기화 (헤더 삽입) — 최초 1회
 export async function initSheet(spreadsheetId) {
   try {
-    // 헤더 행이 있는지 확인
+    // 헤더 행이 있는지 확인 (시트명 없이 → 첫 번째 탭 자동 선택)
     const result = await callProxy({
       action: 'read',
       spreadsheetId,
-      range: `${SHEET_NAME}!A1:I1`,
+      range: `A1:I1`,
     });
     const firstRow = result.values?.[0];
     if (firstRow && firstRow[0] === '날짜') return; // 이미 초기화됨
   } catch {
-    // 시트가 없으면 생성
-    try {
-      await callProxy({ action: 'create_sheet', spreadsheetId });
-    } catch {
-      // 이미 있을 수도 있음 — 무시
-    }
+    // 읽기 실패해도 무시하고 헤더 삽입 시도
   }
 
   // 헤더 삽입
   await callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${SHEET_NAME}!A1`,
+    range: `A1`,
     values: [HEADERS],
   });
 }
@@ -67,7 +61,7 @@ export async function appendRecord(spreadsheetId, record) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${SHEET_NAME}!A:I`,
+    range: `A:I`,
     values: [row],
   });
 }
@@ -77,7 +71,7 @@ export async function readAllRecords(spreadsheetId) {
   const result = await callProxy({
     action: 'read',
     spreadsheetId,
-    range: `${SHEET_NAME}!A2:I`,  // 헤더 제외
+    range: `A2:I`, // 헤더 제외, 첫 번째 탭 자동 선택
   });
 
   const rows = result.values || [];
@@ -113,17 +107,17 @@ export async function uploadAllRecords(spreadsheetId, records) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${SHEET_NAME}!A:I`,
+    range: `A:I`,
     values: rows,
   });
 }
 
-// 스프레드시트 자동 생성 + 시트 이름 + 헤더 세팅
+// 스프레드시트 자동 생성 + 헤더 세팅
 export async function createAndInitSpreadsheet() {
   const token = await getValidAccessToken();
   const authHeader = `Bearer ${token}`;
 
-  // 1. 스프레드시트 생성 (시트 이름도 동시에 지정)
+  // 1. 스프레드시트 생성 (첫 번째 탭은 기본 "Sheet1" 또는 "시트1" 로 자동 생성)
   const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
     method: 'POST',
     headers: {
@@ -132,9 +126,6 @@ export async function createAndInitSpreadsheet() {
     },
     body: JSON.stringify({
       properties: { title: SPREADSHEET_TITLE },
-      sheets: [{
-        properties: { title: SHEET_NAME }  // "혈압기록"
-      }]
     }),
   });
 
@@ -143,13 +134,31 @@ export async function createAndInitSpreadsheet() {
 
   const spreadsheetId = created.spreadsheetId;
 
-  // 2. 헤더 삽입
+  // 2. 헤더 삽입 (첫 번째 탭 자동 선택)
   await callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${SHEET_NAME}!A1`,
+    range: `A1`,
     values: [HEADERS],
   });
 
   return spreadsheetId;
+}
+
+// 기존에 생성된 "MyTools 혈압기록" 시트 찾기
+export async function findExistingSpreadsheet() {
+  const token = await getValidAccessToken();
+
+  const query = encodeURIComponent(
+    `name='${SPREADSHEET_TITLE}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`
+  );
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || '검색 실패');
+
+  return data.files?.[0]?.id || null;
 }

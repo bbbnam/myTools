@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { classifyBP, todayStr, nowTimeStr } from '../utils/bpClassify';
-import { appendRecord, readAllRecords, uploadAllRecords, createAndInitSpreadsheet } from '../utils/sheetsApi';
+import { appendRecord, readAllRecords, uploadAllRecords, createAndInitSpreadsheet, findExistingSpreadsheet } from '../utils/sheetsApi';
 import { loadTokens, saveTokens, clearTokens, buildOAuthUrl } from '../utils/googleAuth';
 
 const LOCAL_KEY = 'bp_records';
@@ -46,6 +46,29 @@ export function useBloodPressure() {
   useEffect(() => {
     if (spreadsheetId) localStorage.setItem(SHEET_ID_KEY, spreadsheetId);
   }, [spreadsheetId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const at = params.get('access_token');
+    const rt = params.get('refresh_token');
+    const ei = params.get('expires_in');
+    if (at) {
+      const t = { access_token: at, refresh_token: rt, expires_in: ei };
+      saveTokens(t);
+      setTokens(loadTokens());
+      window.history.replaceState({}, '', '/bp');
+
+      // 로그인 직후 기존 시트 자동 검색
+      findExistingSpreadsheet()
+        .then(id => {
+          if (id) {
+            setSpreadsheetId(id);
+            localStorage.setItem(SHEET_ID_KEY, id);
+          }
+        })
+        .catch(() => {}); // 검색 실패해도 무시 (수동 생성으로 fallback)
+    }
+  }, []);
 
   // 기록 추가
   const addRecord = useCallback(async (form) => {
