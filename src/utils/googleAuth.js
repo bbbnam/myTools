@@ -1,6 +1,9 @@
 // src/utils/googleAuth.js
 
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+const SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive.readonly',
+].join(' ');
 
 export function buildOAuthUrl() {
   const base = 'https://accounts.google.com/o/oauth2/v2/auth';
