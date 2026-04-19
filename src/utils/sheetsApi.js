@@ -92,3 +92,27 @@ export async function readAllRecords(spreadsheetId) {
     memo:      r[8] || '',
   })).filter(r => r.date && r.systolic);
 }
+
+// 로컬 기록 전체를 Sheets에 업로드
+export async function uploadAllRecords(spreadsheetId, records) {
+  await initSheet(spreadsheetId);
+
+  const rows = records.map(r => [
+    r.date,
+    r.time,
+    r.timeSlot,
+    r.systolic,
+    r.diastolic,
+    r.pulse || '',
+    r.weight || '',
+    r.bpLevel || '',
+    r.memo || '',
+  ]);
+
+  return callProxy({
+    action: 'append',
+    spreadsheetId,
+    range: `${SHEET_NAME}!A:I`,
+    values: rows,
+  });
+}

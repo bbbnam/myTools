@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { classifyBP, todayStr, nowTimeStr } from '../utils/bpClassify';
-import { appendRecord, readAllRecords } from '../utils/sheetsApi';
+import { appendRecord, readAllRecords, uploadAllRecords } from '../utils/sheetsApi';
 import { loadTokens, saveTokens, clearTokens, buildOAuthUrl } from '../utils/googleAuth';
 
 const LOCAL_KEY = 'bp_records';
@@ -110,11 +110,27 @@ export function useBloodPressure() {
     }
   }, [tokens, spreadsheetId, records]);
 
+const pushAllToSheets = useCallback(async () => {
+  if (!tokens || !spreadsheetId) return;
+  if (records.length === 0) return;
+  setSyncing(true);
+  setSyncError('');
+  try {
+    await uploadAllRecords(spreadsheetId, records);
+    setSyncOk(true);
+    setTimeout(() => setSyncOk(false), 2500);
+  } catch (e) {
+    setSyncError('업로드 실패: ' + e.message);
+  } finally {
+    setSyncing(false);
+  }
+}, [tokens, spreadsheetId, records]);
+
   const login = () => { window.location.href = buildOAuthUrl(); };
   const logout = () => { clearTokens(); setTokens(null); };
 
   return {
-    records, addRecord, pullFromSheets,
+    records, addRecord, pullFromSheets, pushAllToSheets,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
     syncing, syncError, syncOk,

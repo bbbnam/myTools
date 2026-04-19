@@ -5,7 +5,8 @@ import './BpGoogleSync.css';
 export default function BpGoogleSync({
   tokens, login, logout,
   spreadsheetId, setSpreadsheetId,
-  onPull, syncing, syncError, syncOk,
+  onPull, onPushAll, recordCount,
+  syncing, syncError, syncOk,
 }) {
   const [showHelp, setShowHelp] = useState(false);
   const isConnected = !!tokens;
@@ -65,6 +66,13 @@ export default function BpGoogleSync({
               disabled={syncing || !spreadsheetId}
             >
               {syncing ? '동기화 중...' : '☁ Sheets에서 불러오기'}
+            </button>
+            <button
+                className="bp-sync__btn bp-sync__btn--push"
+                onClick={onPushAll}
+                disabled={syncing || !spreadsheetId || recordCount === 0}
+              >
+                ↑ 로컬 전체 업로드 ({recordCount}건)
             </button>
             <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
               연결 해제
