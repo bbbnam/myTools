@@ -55,7 +55,8 @@ export function useBloodPressure() {
   // (다른 기기에서 접속하거나 localStorage가 초기화된 경우)
   useEffect(() => {
     const currentTokens = loadTokens();
-    if (currentTokens && !spreadsheetId) {
+    const currentSheetId = localStorage.getItem(SHEET_ID_KEY);
+    if (currentTokens && !currentSheetId) {
       findExistingSpreadsheet()
         .then(id => {
           if (id) {
