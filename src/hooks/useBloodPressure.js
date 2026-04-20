@@ -7,7 +7,6 @@ import { loadTokens, saveTokens, clearTokens, buildOAuthUrl } from '../utils/goo
 
 const LOCAL_KEY = 'bp_records';
 const SHEET_ID_KEY = 'bp_spreadsheet_id';
-// 시트에 동기화된 date_time 키 목록 저장
 const SYNCED_KEYS_KEY = 'bp_synced_keys';
 
 function loadLocal() {
@@ -25,17 +24,24 @@ function saveSyncedKeys(keys) {
   localStorage.setItem(SYNCED_KEYS_KEY, JSON.stringify([...keys]));
 }
 
+// 두 기록이 같은지 비교 — date + systolic + diastolic 기준 (time 형식 차이 무시)
+function isSameRecord(a, b) {
+  return a.date === b.date &&
+    Number(a.systolic)  === Number(b.systolic) &&
+    Number(a.diastolic) === Number(b.diastolic) &&
+    (a.time || '').replace(/^0/, '') === (b.time || '').replace(/^0/, '');
+}
+
 export function useBloodPressure() {
-  const [records, setRecords]             = useState(loadLocal);
-  const [tokens, setTokens]               = useState(loadTokens);
+  const [records, setRecords]           = useState(loadLocal);
+  const [tokens, setTokens]             = useState(loadTokens);
   const [spreadsheetId, setSpreadsheetId] = useState(
     () => localStorage.getItem(SHEET_ID_KEY) || ''
   );
-  const [syncing, setSyncing]         = useState(false);
-  const [syncError, setSyncError]     = useState('');
-  const [syncOk, setSyncOk]           = useState(false);
-  // 동기화된 키 목록으로 hasUnsynced 계산
-  const [syncedKeys, setSyncedKeys]   = useState(loadSyncedKeys);
+  const [syncing, setSyncing]       = useState(false);
+  const [syncError, setSyncError]   = useState('');
+  const [syncOk, setSyncOk]         = useState(false);
+  const [syncedKeys, setSyncedKeys] = useState(loadSyncedKeys);
 
   const hasUnsynced = records.some(r => !syncedKeys.has(`${r.date}_${r.time}`));
 
@@ -50,7 +56,6 @@ export function useBloodPressure() {
       saveTokens(t);
       setTokens(loadTokens());
       window.history.replaceState({}, '', '/bp');
-
       findExistingSpreadsheet()
         .then(id => {
           if (id) {
@@ -108,7 +113,6 @@ export function useBloodPressure() {
       setSyncError('');
       try {
         await appendRecord(spreadsheetId, record);
-        // 성공 시 syncedKeys에 추가
         const newKeys = new Set(syncedKeys);
         newKeys.add(`${record.date}_${record.time}`);
         setSyncedKeys(newKeys);
@@ -117,38 +121,37 @@ export function useBloodPressure() {
         setTimeout(() => setSyncOk(false), 2500);
       } catch (e) {
         setSyncError('Sheets 저장 실패: ' + e.message);
-        // 실패 시 syncedKeys에 추가 안 함 → hasUnsynced 유지
       } finally {
         setSyncing(false);
       }
     }
-    // 연동 안 된 상태면 syncedKeys에 추가 안 함 → hasUnsynced = true 자동
 
     return record;
   }, [records, tokens, spreadsheetId, syncedKeys]);
 
-  // Sheets에서 불러오기 — 중복 없이 머지
+  // Sheets에서 불러오기
   const pullFromSheets = useCallback(async () => {
     if (!tokens || !spreadsheetId) return;
     setSyncing(true);
     setSyncError('');
     try {
       const remote = await readAllRecords(spreadsheetId);
-      const remoteKeys = new Set(remote.map(r => `${r.date}_${r.time}`));
+      const currentRecords = loadLocal();
 
-      // 현재 로컬 records 기준으로 시트에 없는 것만 추출
-      const currentRecords = loadLocal(); // ← state 말고 localStorage 직접 읽기
-      const localOnly = currentRecords.filter(r => !remoteKeys.has(`${r.date}_${r.time}`));
+      // 로컬에만 있는 것 = 시트 기록 중 어느 것과도 매칭 안 되는 것
+      const localOnly = currentRecords.filter(local =>
+        !remote.some(r => isSameRecord(local, r))
+      );
+
       const all = [...remote, ...localOnly];
       all.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 
       setRecords(all);
       saveLocal(all);
 
-      // 시트에 있는 것들 syncedKeys에 추가
-      const newKeys = new Set(syncedKeys);
-      remote.forEach(r => newKeys.add(`${r.date}_${r.time}`));
-      localOnly.forEach(r => newKeys.add(`${r.date}_${r.time}`));
+      // 전체 syncedKeys 갱신
+      const newKeys = new Set();
+      all.forEach(r => newKeys.add(`${r.date}_${r.time}`));
       setSyncedKeys(newKeys);
       saveSyncedKeys(newKeys);
 
@@ -159,7 +162,7 @@ export function useBloodPressure() {
     } finally {
       setSyncing(false);
     }
-  }, [tokens, spreadsheetId, syncedKeys]);
+  }, [tokens, spreadsheetId]);
 
   // 로컬에만 있는 것만 업로드
   const pushAllToSheets = useCallback(async () => {
@@ -168,16 +171,17 @@ export function useBloodPressure() {
     setSyncError('');
     try {
       const remote = await readAllRecords(spreadsheetId);
-      const remoteKeys = new Set(remote.map(r => `${r.date}_${r.time}`));
-      const toUpload = records.filter(r => !remoteKeys.has(`${r.date}_${r.time}`));
+      const toUpload = records.filter(local =>
+        !remote.some(r => isSameRecord(local, r))
+      );
 
       if (toUpload.length > 0) {
         await uploadAllRecords(spreadsheetId, toUpload);
       }
 
-      // 업로드한 것들 syncedKeys에 추가
-      const newKeys = new Set(syncedKeys);
-      toUpload.forEach(r => newKeys.add(`${r.date}_${r.time}`));
+      // 전체 syncedKeys 갱신
+      const newKeys = new Set();
+      records.forEach(r => newKeys.add(`${r.date}_${r.time}`));
       remote.forEach(r => newKeys.add(`${r.date}_${r.time}`));
       setSyncedKeys(newKeys);
       saveSyncedKeys(newKeys);
@@ -189,7 +193,7 @@ export function useBloodPressure() {
     } finally {
       setSyncing(false);
     }
-  }, [tokens, spreadsheetId, records, syncedKeys, hasUnsynced]);
+  }, [tokens, spreadsheetId, records, hasUnsynced]);
 
   // 스프레드시트 자동 생성
   const createSpreadsheet = useCallback(async () => {
@@ -214,8 +218,6 @@ export function useBloodPressure() {
     const next = records.filter((_, i) => i !== index);
     setRecords(next);
     saveLocal(next);
-
-    // syncedKeys에서도 제거
     const newKeys = new Set(syncedKeys);
     newKeys.delete(`${target.date}_${target.time}`);
     setSyncedKeys(newKeys);
