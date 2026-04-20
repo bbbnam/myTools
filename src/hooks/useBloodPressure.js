@@ -136,17 +136,19 @@ export function useBloodPressure() {
       const remote = await readAllRecords(spreadsheetId);
       const remoteKeys = new Set(remote.map(r => `${r.date}_${r.time}`));
 
-      // 로컬에만 있는 것 + 원격 전체 머지 (중복 제거)
-      const localOnly = records.filter(r => !remoteKeys.has(`${r.date}_${r.time}`));
+      // 현재 로컬 records 기준으로 시트에 없는 것만 추출
+      const currentRecords = loadLocal(); // ← state 말고 localStorage 직접 읽기
+      const localOnly = currentRecords.filter(r => !remoteKeys.has(`${r.date}_${r.time}`));
       const all = [...remote, ...localOnly];
       all.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 
       setRecords(all);
       saveLocal(all);
 
-      // 시트에 있는 것들은 모두 synced로 표시
+      // 시트에 있는 것들 syncedKeys에 추가
       const newKeys = new Set(syncedKeys);
       remote.forEach(r => newKeys.add(`${r.date}_${r.time}`));
+      localOnly.forEach(r => newKeys.add(`${r.date}_${r.time}`));
       setSyncedKeys(newKeys);
       saveSyncedKeys(newKeys);
 
@@ -157,7 +159,7 @@ export function useBloodPressure() {
     } finally {
       setSyncing(false);
     }
-  }, [tokens, spreadsheetId, records, syncedKeys]);
+  }, [tokens, spreadsheetId, syncedKeys]);
 
   // 로컬에만 있는 것만 업로드
   const pushAllToSheets = useCallback(async () => {
