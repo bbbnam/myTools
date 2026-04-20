@@ -23,7 +23,7 @@ export default function BloodPressurePage() {
     records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
-    syncing, syncError, syncOk, hasUnsynced
+    syncing, syncError, syncOk, hasUnsynced, deleteRecord
   } = useBloodPressure();
 
   const handleSubmit = async (form) => {
@@ -67,7 +67,7 @@ export default function BloodPressurePage() {
         )}
 
         {tab === 'history' && (
-          <BpHistory records={records} />
+          <BpHistory records={records} onDelete={deleteRecord}/>
         )}
 
         {tab === 'sync' && (

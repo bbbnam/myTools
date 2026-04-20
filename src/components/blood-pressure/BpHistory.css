@@ -103,3 +103,39 @@
   color: var(--text-dim);
   width: 100%;
 }
+
+.bp-history__hint {
+  font-size: 11px;
+  color: #ff5252;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.bp-history__item--delete {
+  border-color: rgba(213, 0, 0, 0.4) !important;
+  background: rgba(213, 0, 0, 0.06);
+}
+
+.bp-history__delete-btn {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: #d50000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bp-history__cancel-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
