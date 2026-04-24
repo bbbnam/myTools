@@ -19,7 +19,11 @@ function loadLocalMonth(yearMonth) {
   catch { return []; }
 }
 function saveLocalMonth(yearMonth, records) {
-  localStorage.setItem(localKey(yearMonth), JSON.stringify(records));
+  if (records.length === 0) {
+    localStorage.removeItem(localKey(yearMonth));
+  } else {
+    localStorage.setItem(localKey(yearMonth), JSON.stringify(records));
+  }
 }
 
 function getAllMonths() {
@@ -28,8 +32,10 @@ function getAllMonths() {
     const key = localStorage.key(i);
     if (key && key.startsWith('bp_records_')) {
       const yearMonth = key.replace('bp_records_', '');
-      const data = loadLocalMonth(yearMonth);
-      if (data.length > 0) months.push(yearMonth); // ← 빈 월 제외
+      if (/^\d{4}-\d{2}$/.test(yearMonth)) {
+        const data = loadLocalMonth(yearMonth);
+        if (data.length > 0) months.push(yearMonth);
+      }
     }
   }
   return months.sort().reverse();
@@ -56,8 +62,15 @@ function currentYearMonth() {
 }
 
 export function useBloodPressure() {
-  const [selectedMonth, setSelectedMonth] = useState(currentYearMonth());
-  const [records, setRecords]             = useState(() => sortByDateTime(loadLocalMonth(currentYearMonth())));
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const months = getAllMonths();
+    return months.length > 0 ? months[0] : currentYearMonth();
+  });
+  const [records, setRecords] = useState(() => {
+    const months = getAllMonths();
+    const initMonth = months.length > 0 ? months[0] : currentYearMonth();
+    return sortByDateTime(loadLocalMonth(initMonth));
+  });
   const [allMonths, setAllMonths]         = useState(getAllMonths);
   const [tokens, setTokens]               = useState(loadTokens);
   const [spreadsheetId, setSpreadsheetId] = useState(
@@ -68,17 +81,24 @@ export function useBloodPressure() {
   const [syncOk, setSyncOk]           = useState(false);
   const [syncedIds, setSyncedIds]     = useState(loadSyncedIds);
 
-  // 시트 탭 목록 관련 상태
-  const [sheetTabs, setSheetTabs]           = useState([]);       // 시트에 있는 월 탭 목록
-  const [loadingTabs, setLoadingTabs]       = useState(false);    // 탭 목록 로딩 중
-  const [selectedTabs, setSelectedTabs]     = useState([]);       // 사용자가 선택한 월들
-  const [syncingTabs, setSyncingTabs]       = useState(false);    // 선택 월 동기화 중
-  const [tabSyncProgress, setTabSyncProgress] = useState('');     // 진행 상황 메시지
+  const [sheetTabs, setSheetTabs]             = useState([]);
+  const [loadingTabs, setLoadingTabs]         = useState(false);
+  const [selectedTabs, setSelectedTabs]       = useState([]);
+  const [syncingTabs, setSyncingTabs]         = useState(false);
+  const [tabSyncProgress, setTabSyncProgress] = useState('');
 
   const hasUnsynced = records.some(r => r.id && !syncedIds.has(r.id));
 
   useEffect(() => {
     setRecords(sortByDateTime(loadLocalMonth(selectedMonth)));
+  }, [selectedMonth]);
+
+  const refreshAllMonths = useCallback(() => {
+    const months = getAllMonths();
+    setAllMonths(months);
+    if (months.length > 0 && !months.includes(selectedMonth)) {
+      setSelectedMonth(months[0]);
+    }
   }, [selectedMonth]);
 
   // OAuth 콜백 처리
@@ -146,7 +166,7 @@ export function useBloodPressure() {
     saveLocalMonth(yearMonth, next);
 
     if (yearMonth === selectedMonth) setRecords(next);
-    setAllMonths(getAllMonths());
+    refreshAllMonths();
 
     if (tokens && spreadsheetId) {
       setSyncing(true);
@@ -167,7 +187,7 @@ export function useBloodPressure() {
     }
 
     return record;
-  }, [selectedMonth, tokens, spreadsheetId, syncedIds]);
+  }, [selectedMonth, tokens, spreadsheetId, syncedIds, refreshAllMonths]);
 
   // 선택 월 시트 → 로컬 동기화
   const syncWithSheets = useCallback(async () => {
@@ -178,12 +198,16 @@ export function useBloodPressure() {
       const remote = await readMonthRecords(spreadsheetId, selectedMonth);
       const sorted = sortByDateTime(remote);
 
+      // 저장
       saveLocalMonth(selectedMonth, sorted);
-      setRecords(sorted);
-      setAllMonths(getAllMonths());
+
+      // 저장 후 localStorage에서 다시 읽어서 records 갱신 (타이밍 문제 방지)
+      const fresh = sortByDateTime(loadLocalMonth(selectedMonth));
+      setRecords(fresh);
+      refreshAllMonths();
 
       const newIds = new Set(syncedIds);
-      sorted.forEach(r => { if (r.id) newIds.add(r.id); });
+      fresh.forEach(r => { if (r.id) newIds.add(r.id); });
       setSyncedIds(newIds);
       saveSyncedIds(newIds);
 
@@ -194,7 +218,7 @@ export function useBloodPressure() {
     } finally {
       setSyncing(false);
     }
-  }, [tokens, spreadsheetId, selectedMonth, syncedIds]);
+  }, [tokens, spreadsheetId, selectedMonth, syncedIds, refreshAllMonths]);
 
   // 선택 월 로컬 → 시트 업로드
   const uploadLocalToSheets = useCallback(async () => {
@@ -232,7 +256,7 @@ export function useBloodPressure() {
     try {
       const tabs = await getSheetTabs(spreadsheetId);
       setSheetTabs(tabs);
-      setSelectedTabs([]); // 선택 초기화
+      setSelectedTabs([]);
     } catch (e) {
       setSyncError('탭 목록 조회 실패: ' + e.message);
     } finally {
@@ -256,11 +280,13 @@ export function useBloodPressure() {
         saveLocalMonth(yearMonth, sorted);
         sorted.forEach(r => { if (r.id) newIds.add(r.id); });
 
-        // 현재 선택된 월이면 화면도 업데이트
-        if (yearMonth === selectedMonth) setRecords(sorted);
+        if (yearMonth === selectedMonth) {
+          const fresh = sortByDateTime(loadLocalMonth(yearMonth));
+          setRecords(fresh);
+        }
       }
 
-      setAllMonths(getAllMonths());
+      refreshAllMonths();
       setSyncedIds(newIds);
       saveSyncedIds(newIds);
       setSelectedTabs([]);
@@ -275,7 +301,7 @@ export function useBloodPressure() {
     } finally {
       setSyncingTabs(false);
     }
-  }, [tokens, spreadsheetId, selectedTabs, selectedMonth, syncedIds]);
+  }, [tokens, spreadsheetId, selectedTabs, selectedMonth, syncedIds, refreshAllMonths]);
 
   // 스프레드시트 자동 생성
   const createSpreadsheet = useCallback(async () => {
@@ -302,6 +328,7 @@ export function useBloodPressure() {
 
     saveLocalMonth(yearMonth, next);
     setRecords(next);
+    refreshAllMonths();
 
     if (target.id) {
       const newIds = new Set(syncedIds);
@@ -317,7 +344,7 @@ export function useBloodPressure() {
         // 시트 반영 실패해도 로컬은 이미 삭제됨
       }
     }
-  }, [records, syncedIds, tokens, spreadsheetId]);
+  }, [records, syncedIds, tokens, spreadsheetId, refreshAllMonths]);
 
   const login  = () => { window.location.href = buildOAuthUrl(); };
   const logout = () => {
@@ -340,7 +367,6 @@ export function useBloodPressure() {
     spreadsheetId,
     syncing, syncError, syncOk,
     hasUnsynced,
-    // 탭 목록 관련
     sheetTabs, loadingTabs, loadSheetTabs,
     selectedTabs, setSelectedTabs,
     syncingTabs, syncSelectedTabs, tabSyncProgress,
