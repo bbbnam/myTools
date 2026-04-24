@@ -20,6 +20,11 @@ async function callProxy(body) {
   return data;
 }
 
+// 탭 이름을 range에서 안전하게 사용하도록 작은따옴표로 감쌈
+function safeTab(tabName) {
+  return `'${tabName}'`;
+}
+
 export function getSheetTabName(yearMonth) {
   return yearMonth;
 }
@@ -34,12 +39,11 @@ export async function getSheetTabs(spreadsheetId) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || '탭 목록 조회 실패');
 
-  // "YYYY-MM" 형식인 탭만 필터링
   const tabs = data.sheets?.map(s => s.properties.title) || [];
   return tabs
     .filter(t => /^\d{4}-\d{2}$/.test(t))
     .sort()
-    .reverse(); // 최신 월 먼저
+    .reverse();
 }
 
 export async function initMonthSheet(spreadsheetId, yearMonth) {
@@ -49,7 +53,7 @@ export async function initMonthSheet(spreadsheetId, yearMonth) {
     const result = await callProxy({
       action: 'read',
       spreadsheetId,
-      range: `${tabName}!A1:J1`,
+      range: `${safeTab(tabName)}!A1:J1`,
     });
     const firstRow = result.values?.[0];
     if (firstRow && firstRow[0] === 'id') return;
@@ -64,7 +68,7 @@ export async function initMonthSheet(spreadsheetId, yearMonth) {
   await callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${tabName}!A1`,
+    range: `${safeTab(tabName)}!A1`,
     values: [HEADERS],
   });
 }
@@ -89,7 +93,7 @@ export async function appendRecord(spreadsheetId, record) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${tabName}!A:J`,
+    range: `${safeTab(tabName)}!A:J`,
     values: [row],
   });
 }
@@ -100,7 +104,7 @@ export async function readMonthRecords(spreadsheetId, yearMonth) {
     const result = await callProxy({
       action: 'read',
       spreadsheetId,
-      range: `${tabName}!A2:J`,
+      range: `${safeTab(tabName)}!A2:J`,
     });
     const rows = result.values || [];
     return rows.map(r => ({
@@ -127,7 +131,7 @@ export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
   await callProxy({
     action: 'clear',
     spreadsheetId,
-    range: `${tabName}!A2:J`,
+    range: `${safeTab(tabName)}!A2:J`,
   });
 
   if (records.length === 0) return;
@@ -141,7 +145,7 @@ export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${tabName}!A:J`,
+    range: `${safeTab(tabName)}!A:J`,
     values: rows,
   });
 }
@@ -159,7 +163,7 @@ export async function uploadMonthRecords(spreadsheetId, yearMonth, records) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `${tabName}!A:J`,
+    range: `${safeTab(tabName)}!A:J`,
     values: rows,
   });
 }
