@@ -22,7 +22,7 @@ export default function BloodPressurePage() {
   const {
     records, addRecord, syncWithSheets, createSpreadsheet,
     tokens, login, logout,
-    spreadsheetId, setSpreadsheetId,
+    spreadsheetId,        // ← setSpreadsheetId 제거
     syncing, syncError, syncOk, hasUnsynced, deleteRecord
   } = useBloodPressure();
 
