@@ -3,7 +3,6 @@
 import { getValidAccessToken } from './googleAuth';
 
 const SPREADSHEET_TITLE = 'MyTools 혈압기록';
-// id 컬럼 맨 앞에 추가 (A열)
 const HEADERS = ['id', '날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
 
 async function callProxy(body) {
@@ -21,78 +20,108 @@ async function callProxy(body) {
   return data;
 }
 
-// 시트 초기화 (헤더 삽입) — 최초 1회
-export async function initSheet(spreadsheetId) {
+// 월별 탭 이름 생성 (예: "2025-04")
+export function getSheetTabName(yearMonth) {
+  return yearMonth; // "2025-04" 형식 그대로 사용
+}
+
+// 특정 월 탭 초기화 (없으면 생성 + 헤더 삽입)
+export async function initMonthSheet(spreadsheetId, yearMonth) {
+  const tabName = getSheetTabName(yearMonth);
+
+  // 탭 존재 여부 확인
   try {
     const result = await callProxy({
       action: 'read',
       spreadsheetId,
-      range: `A1:J1`,
+      range: `${tabName}!A1:J1`,
     });
     const firstRow = result.values?.[0];
-    // id 컬럼이 있는 새 헤더 형식인지 확인
-    if (firstRow && firstRow[0] === 'id') return;
+    if (firstRow && firstRow[0] === 'id') return; // 이미 초기화됨
   } catch {
-    // 읽기 실패해도 무시
+    // 탭 없음 → 생성
+    try {
+      await callProxy({ action: 'create_sheet', spreadsheetId, sheetTitle: tabName });
+    } catch {
+      // 이미 있을 수도 있음 → 무시
+    }
   }
 
+  // 헤더 삽입
   await callProxy({
     action: 'append',
     spreadsheetId,
-    range: `A1`,
+    range: `${tabName}!A1`,
     values: [HEADERS],
   });
 }
 
-// 혈압 기록 1건 추가
+// 특정 월 기록 1건 추가
 export async function appendRecord(spreadsheetId, record) {
-  await initSheet(spreadsheetId);
+  const yearMonth = record.date.slice(0, 7); // "2025-04"
+  await initMonthSheet(spreadsheetId, yearMonth);
+  const tabName = getSheetTabName(yearMonth);
+
   const row = [
-    record.id,          // A: id
-    record.date,        // B: 날짜
-    record.time,        // C: 시간
-    record.timeSlot,    // D: 시간대
-    record.systolic,    // E: 수축기
-    record.diastolic,   // F: 이완기
-    record.pulse,       // G: 맥박
-    record.weight || '', // H: 몸무게
-    record.bpLevel,     // I: 혈압단계
-    record.memo || '',  // J: 메모
+    record.id,
+    record.date,
+    record.time,
+    record.timeSlot,
+    record.systolic,
+    record.diastolic,
+    record.pulse,
+    record.weight || '',
+    record.bpLevel,
+    record.memo || '',
   ];
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `A:J`,
+    range: `${tabName}!A:J`,
     values: [row],
   });
 }
 
-// 전체 기록 읽기
-export async function readAllRecords(spreadsheetId) {
-  const result = await callProxy({
-    action: 'read',
-    spreadsheetId,
-    range: `A2:J`,
-  });
-
-  const rows = result.values || [];
-  return rows.map(r => ({
-    id:        r[0] || '',
-    date:      r[1] || '',
-    time:      r[2] || '',
-    timeSlot:  r[3] || '',
-    systolic:  Number(r[4]) || 0,
-    diastolic: Number(r[5]) || 0,
-    pulse:     Number(r[6]) || 0,
-    weight:    r[7] ? Number(r[7]) : null,
-    bpLevel:   r[8] || '',
-    memo:      r[9] || '',
-  })).filter(r => r.date && r.systolic);
+// 특정 월 기록 읽기
+export async function readMonthRecords(spreadsheetId, yearMonth) {
+  const tabName = getSheetTabName(yearMonth);
+  try {
+    const result = await callProxy({
+      action: 'read',
+      spreadsheetId,
+      range: `${tabName}!A2:J`,
+    });
+    const rows = result.values || [];
+    return rows.map(r => ({
+      id:        r[0] || '',
+      date:      r[1] || '',
+      time:      r[2] || '',
+      timeSlot:  r[3] || '',
+      systolic:  Number(r[4]) || 0,
+      diastolic: Number(r[5]) || 0,
+      pulse:     Number(r[6]) || 0,
+      weight:    r[7] ? Number(r[7]) : null,
+      bpLevel:   r[8] || '',
+      memo:      r[9] || '',
+    })).filter(r => r.date && r.systolic);
+  } catch {
+    return []; // 해당 월 탭 없으면 빈 배열
+  }
 }
 
-// 로컬 기록 전체를 Sheets에 업로드
-export async function uploadAllRecords(spreadsheetId, records) {
-  await initSheet(spreadsheetId);
+// 특정 월 기록 전체 덮어쓰기 (삭제 반영용)
+export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
+  const tabName = getSheetTabName(yearMonth);
+  await initMonthSheet(spreadsheetId, yearMonth);
+
+  // 기존 데이터 영역 클리어 후 재작성
+  await callProxy({
+    action: 'clear',
+    spreadsheetId,
+    range: `${tabName}!A2:J`,
+  });
+
+  if (records.length === 0) return;
 
   const rows = records.map(r => [
     r.id,
@@ -110,12 +139,38 @@ export async function uploadAllRecords(spreadsheetId, records) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `A:J`,
+    range: `${tabName}!A:J`,
     values: rows,
   });
 }
 
-// 스프레드시트 자동 생성 + 헤더 세팅
+// 특정 월 기록 업로드
+export async function uploadMonthRecords(spreadsheetId, yearMonth, records) {
+  await initMonthSheet(spreadsheetId, yearMonth);
+  const tabName = getSheetTabName(yearMonth);
+
+  const rows = records.map(r => [
+    r.id,
+    r.date,
+    r.time,
+    r.timeSlot,
+    r.systolic,
+    r.diastolic,
+    r.pulse || '',
+    r.weight || '',
+    r.bpLevel || '',
+    r.memo || '',
+  ]);
+
+  return callProxy({
+    action: 'append',
+    spreadsheetId,
+    range: `${tabName}!A:J`,
+    values: rows,
+  });
+}
+
+// 스프레드시트 자동 생성
 export async function createAndInitSpreadsheet() {
   const token = await getValidAccessToken();
   const authHeader = `Bearer ${token}`;
@@ -134,19 +189,10 @@ export async function createAndInitSpreadsheet() {
   const created = await createRes.json();
   if (!createRes.ok) throw new Error(created.error?.message || '스프레드시트 생성 실패');
 
-  const spreadsheetId = created.spreadsheetId;
-
-  await callProxy({
-    action: 'append',
-    spreadsheetId,
-    range: `A1`,
-    values: [HEADERS],
-  });
-
-  return spreadsheetId;
+  return created.spreadsheetId;
 }
 
-// 기존에 생성된 "MyTools 혈압기록" 시트 찾기
+// 기존 스프레드시트 찾기
 export async function findExistingSpreadsheet() {
   const token = await getValidAccessToken();
 

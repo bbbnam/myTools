@@ -8,10 +8,16 @@ export default function BpGoogleSync({
   onSync, onUploadLocal, onCreateSheet,
   syncing, syncError, syncOk,
   hasUnsynced, localCount,
+  selectedMonth,
 }) {
   const isConnected = !!tokens;
-  const [confirmSync, setConfirmSync]   = useState(false); // 동기화 확인 팝업
-  const [confirmUpload, setConfirmUpload] = useState(false); // 업로드 확인 팝업
+  const [confirmSync,   setConfirmSync]   = useState(false);
+  const [confirmUpload, setConfirmUpload] = useState(false);
+
+  const formatMonth = (ym) => {
+    const [y, m] = ym.split('-');
+    return `${y}년 ${parseInt(m)}월`;
+  };
 
   return (
     <div className="bp-sync">
@@ -35,7 +41,6 @@ export default function BpGoogleSync({
         </div>
       ) : (
         <div className="bp-sync__connected-area">
-
           {!spreadsheetId ? (
             <div className="bp-sync__create-area">
               <p className="bp-sync__desc">
@@ -58,31 +63,33 @@ export default function BpGoogleSync({
               <label className="bp-sync__label">연결된 스프레드시트</label>
               <div className="bp-sync__sheet-id">{spreadsheetId}</div>
 
+              {/* 현재 동기화 대상 월 표시 */}
+              <div className="bp-sync__month-info">
+                📅 현재 동기화 대상: <b>{formatMonth(selectedMonth)}</b> 탭
+              </div>
+
               <div className="bp-sync__warning">
                 ⚠️ Google Drive에서 <b>"MyTools 혈압기록"</b> 파일명을 변경하면
                 다른 기기에서 로그인 시 새 스프레드시트가 생성될 수 있습니다.
-                또한 스프레드시트의 <b>첫 번째 시트 탭</b>에 데이터가 저장되므로
-                탭 순서를 변경하지 마세요.
+                월별 탭 순서나 이름을 변경하지 마세요.
               </div>
 
               <div className="bp-sync__actions">
-                {/* 시트 → 로컬 동기화 */}
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
                   onClick={() => setConfirmSync(true)}
                   disabled={syncing}
                 >
-                  {syncing ? '동기화 중...' : '☁ 시트 데이터로 동기화'}
+                  {syncing ? '동기화 중...' : `☁ ${formatMonth(selectedMonth)} 시트로 동기화`}
                 </button>
 
-                {/* 로컬 → 시트 업로드 (미전송 있을 때만 활성화) */}
                 {hasUnsynced && (
                   <button
                     className="bp-sync__btn bp-sync__btn--push"
                     onClick={() => setConfirmUpload(true)}
                     disabled={syncing}
                   >
-                    ↑ 로컬 기록 시트에 업로드 ({localCount}건)
+                    ↑ 로컬 기록 업로드 ({localCount}건)
                   </button>
                 )}
 
@@ -98,17 +105,16 @@ export default function BpGoogleSync({
         </div>
       )}
 
-      {/* ── 시트 동기화 확인 팝업 ── */}
       {confirmSync && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">
             <p className="bp-sync__dialog-title">⚠️ 동기화 확인</p>
             <p className="bp-sync__dialog-desc">
-              시트 데이터로 동기화하면 <b>현재 기기의 로컬 기록이 모두 삭제</b>되고
-              Google Sheets 데이터로 교체됩니다.
+              <b>{formatMonth(selectedMonth)}</b> 시트 데이터로 동기화하면
+              현재 기기의 <b>해당 월 로컬 기록이 모두 교체</b>됩니다.
             </p>
             <p className="bp-sync__dialog-desc">
-              로컬에만 있는 기록이 있다면 먼저 <b>"로컬 기록 시트에 업로드"</b>를 해주세요.
+              로컬에만 있는 기록이 있다면 먼저 업로드를 해주세요.
             </p>
             <div className="bp-sync__dialog-btns">
               <button
@@ -128,14 +134,13 @@ export default function BpGoogleSync({
         </div>
       )}
 
-      {/* ── 로컬 업로드 확인 팝업 ── */}
       {confirmUpload && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">
             <p className="bp-sync__dialog-title">업로드 확인</p>
             <p className="bp-sync__dialog-desc">
-              로컬 기록 <b>{localCount}건</b>을 Google Sheets에 업로드합니다.
-              기존 시트 데이터에 추가됩니다.
+              <b>{formatMonth(selectedMonth)}</b> 로컬 기록 <b>{localCount}건</b>을
+              Google Sheets에 업로드합니다.
             </p>
             <div className="bp-sync__dialog-btns">
               <button

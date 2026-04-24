@@ -1,5 +1,4 @@
 // api/sheets.js
-// Google Sheets API 프록시 — client_secret을 서버에서만 보관
 
 const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
@@ -12,7 +11,7 @@ export default async function handler(req, res) {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: 'No authorization header' });
 
-  const { action, spreadsheetId, range, values } = req.method === 'POST'
+  const { action, spreadsheetId, range, values, sheetTitle } = req.method === 'POST'
     ? req.body
     : req.query;
 
@@ -22,38 +21,39 @@ export default async function handler(req, res) {
     let googleRes;
 
     if (action === 'append') {
-      // 행 추가
       googleRes = await fetch(
         `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
         {
           method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
           body: JSON.stringify({ values }),
         }
       );
     } else if (action === 'read') {
-      // 행 읽기
       googleRes = await fetch(
         `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}`,
         { headers: { 'Authorization': authHeader } }
       );
+    } else if (action === 'clear') {
+      // 특정 범위 데이터 클리어
+      googleRes = await fetch(
+        `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
+        }
+      );
     } else if (action === 'create_sheet') {
-      // 시트가 없으면 생성 + 헤더 삽입
+      // 월별 탭 생성 (sheetTitle 지정 가능)
       googleRes = await fetch(
         `${SHEETS_BASE}/${spreadsheetId}:batchUpdate`,
         {
           method: 'POST',
-          headers: {
-            'Authorization': authHeader,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             requests: [{
               addSheet: {
-                properties: { title: '혈압기록' }
+                properties: { title: sheetTitle || '혈압기록' }
               }
             }]
           }),

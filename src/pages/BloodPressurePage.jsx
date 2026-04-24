@@ -21,6 +21,7 @@ export default function BloodPressurePage() {
 
   const {
     records, addRecord, deleteRecord,
+    selectedMonth, setSelectedMonth, allMonths,
     syncWithSheets, uploadLocalToSheets,
     createSpreadsheet,
     tokens, login, logout,
@@ -66,7 +67,13 @@ export default function BloodPressurePage() {
           </>
         )}
         {tab === 'history' && (
-          <BpHistory records={records} onDelete={deleteRecord} />
+          <BpHistory
+            records={records}
+            onDelete={deleteRecord}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            allMonths={allMonths}
+          />
         )}
         {tab === 'sync' && (
           <BpGoogleSync
@@ -78,6 +85,7 @@ export default function BloodPressurePage() {
             syncing={syncing} syncError={syncError} syncOk={syncOk}
             hasUnsynced={hasUnsynced}
             localCount={records.length}
+            selectedMonth={selectedMonth}
           />
         )}
       </div>
