@@ -9,15 +9,28 @@ export default function BpGoogleSync({
   syncing, syncError, syncOk,
   hasUnsynced, localCount,
   selectedMonth,
+  sheetTabs, loadingTabs, onLoadTabs,
+  selectedTabs, setSelectedTabs,
+  syncingTabs, onSyncSelectedTabs, tabSyncProgress,
 }) {
   const isConnected = !!tokens;
   const [confirmSync,   setConfirmSync]   = useState(false);
   const [confirmUpload, setConfirmUpload] = useState(false);
+  const [showTabSync,   setShowTabSync]   = useState(false); // 탭 목록 UI 표시
 
   const formatMonth = (ym) => {
     const [y, m] = ym.split('-');
     return `${y}년 ${parseInt(m)}월`;
   };
+
+  const toggleTab = (tab) => {
+    setSelectedTabs(prev =>
+      prev.includes(tab) ? prev.filter(t => t !== tab) : [...prev, tab]
+    );
+  };
+
+  const selectAll = () => setSelectedTabs([...sheetTabs]);
+  const clearAll  = () => setSelectedTabs([]);
 
   return (
     <div className="bp-sync">
@@ -63,7 +76,6 @@ export default function BpGoogleSync({
               <label className="bp-sync__label">연결된 스프레드시트</label>
               <div className="bp-sync__sheet-id">{spreadsheetId}</div>
 
-              {/* 현재 동기화 대상 월 표시 */}
               <div className="bp-sync__month-info">
                 📅 현재 동기화 대상: <b>{formatMonth(selectedMonth)}</b> 탭
               </div>
@@ -71,32 +83,104 @@ export default function BpGoogleSync({
               <div className="bp-sync__warning">
                 ⚠️ Google Drive에서 <b>"MyTools 혈압기록"</b> 파일명을 변경하면
                 다른 기기에서 로그인 시 새 스프레드시트가 생성될 수 있습니다.
-                월별 탭 순서나 이름을 변경하지 마세요.
+                월별 탭 이름을 변경하지 마세요.
               </div>
 
+              {/* 이번 달 동기화 버튼들 */}
               <div className="bp-sync__actions">
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
                   onClick={() => setConfirmSync(true)}
-                  disabled={syncing}
+                  disabled={syncing || syncingTabs}
                 >
-                  {syncing ? '동기화 중...' : `☁ ${formatMonth(selectedMonth)} 시트로 동기화`}
+                  {syncing ? '동기화 중...' : `☁ ${formatMonth(selectedMonth)} 동기화`}
                 </button>
 
                 {hasUnsynced && (
                   <button
                     className="bp-sync__btn bp-sync__btn--push"
                     onClick={() => setConfirmUpload(true)}
-                    disabled={syncing}
+                    disabled={syncing || syncingTabs}
                   >
                     ↑ 로컬 기록 업로드 ({localCount}건)
                   </button>
                 )}
-
-                <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
-                  연결 해제
-                </button>
               </div>
+
+              {/* 과거 월 일괄 동기화 섹션 */}
+              <div className="bp-sync__divider" />
+
+              <button
+                className="bp-sync__btn bp-sync__btn--tabs"
+                onClick={() => {
+                  setShowTabSync(v => !v);
+                  if (!showTabSync && sheetTabs.length === 0) onLoadTabs();
+                }}
+                disabled={syncing || syncingTabs}
+              >
+                📂 과거 월 기록 가져오기
+              </button>
+
+              {showTabSync && (
+                <div className="bp-sync__tab-area">
+                  {loadingTabs ? (
+                    <p className="bp-sync__tab-loading">탭 목록 불러오는 중...</p>
+                  ) : sheetTabs.length === 0 ? (
+                    <p className="bp-sync__tab-empty">
+                      시트에 월별 탭이 없습니다.
+                      <button className="bp-sync__tab-refresh" onClick={onLoadTabs}>
+                        새로고침
+                      </button>
+                    </p>
+                  ) : (
+                    <>
+                      <div className="bp-sync__tab-controls">
+                        <button className="bp-sync__tab-ctrl-btn" onClick={selectAll}>전체 선택</button>
+                        <button className="bp-sync__tab-ctrl-btn" onClick={clearAll}>전체 해제</button>
+                        <button className="bp-sync__tab-ctrl-btn" onClick={onLoadTabs}>새로고침</button>
+                      </div>
+
+                      <div className="bp-sync__tab-list">
+                        {sheetTabs.map(tab => (
+                          <label key={tab} className="bp-sync__tab-item">
+                            <input
+                              type="checkbox"
+                              checked={selectedTabs.includes(tab)}
+                              onChange={() => toggleTab(tab)}
+                              disabled={syncingTabs}
+                            />
+                            <span>{formatMonth(tab)}</span>
+                            {/* 로컬에 이미 있는 월 표시 */}
+                            {loadLocalMonth(tab).length > 0 && (
+                              <span className="bp-sync__tab-local">로컬 있음</span>
+                            )}
+                          </label>
+                        ))}
+                      </div>
+
+                      {tabSyncProgress && (
+                        <p className="bp-sync__tab-progress">{tabSyncProgress}</p>
+                      )}
+
+                      <button
+                        className="bp-sync__btn bp-sync__btn--pull"
+                        onClick={onSyncSelectedTabs}
+                        disabled={syncingTabs || selectedTabs.length === 0}
+                      >
+                        {syncingTabs
+                          ? tabSyncProgress || '동기화 중...'
+                          : `선택한 ${selectedTabs.length}개월 동기화`}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="bp-sync__divider" />
+
+              <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
+                연결 해제
+              </button>
             </>
           )}
 
@@ -105,6 +189,7 @@ export default function BpGoogleSync({
         </div>
       )}
 
+      {/* 이번 달 동기화 확인 팝업 */}
       {confirmSync && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">
@@ -120,20 +205,17 @@ export default function BpGoogleSync({
               <button
                 className="bp-sync__dialog-btn bp-sync__dialog-btn--cancel"
                 onClick={() => setConfirmSync(false)}
-              >
-                취소
-              </button>
+              >취소</button>
               <button
                 className="bp-sync__dialog-btn bp-sync__dialog-btn--confirm"
                 onClick={() => { setConfirmSync(false); onSync(); }}
-              >
-                동기화 진행
-              </button>
+              >동기화 진행</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* 업로드 확인 팝업 */}
       {confirmUpload && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">
@@ -146,15 +228,11 @@ export default function BpGoogleSync({
               <button
                 className="bp-sync__dialog-btn bp-sync__dialog-btn--cancel"
                 onClick={() => setConfirmUpload(false)}
-              >
-                취소
-              </button>
+              >취소</button>
               <button
                 className="bp-sync__dialog-btn bp-sync__dialog-btn--confirm"
                 onClick={() => { setConfirmUpload(false); onUploadLocal(); }}
-              >
-                업로드
-              </button>
+              >업로드</button>
             </div>
           </div>
         </div>

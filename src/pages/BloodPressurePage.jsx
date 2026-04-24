@@ -28,6 +28,9 @@ export default function BloodPressurePage() {
     spreadsheetId,
     syncing, syncError, syncOk,
     hasUnsynced,
+    sheetTabs, loadingTabs, loadSheetTabs,
+    selectedTabs, setSelectedTabs,
+    syncingTabs, syncSelectedTabs, tabSyncProgress,
   } = useBloodPressure();
 
   const handleSubmit = async (form) => {
@@ -86,6 +89,14 @@ export default function BloodPressurePage() {
             hasUnsynced={hasUnsynced}
             localCount={records.length}
             selectedMonth={selectedMonth}
+            sheetTabs={sheetTabs}
+            loadingTabs={loadingTabs}
+            onLoadTabs={loadSheetTabs}
+            selectedTabs={selectedTabs}
+            setSelectedTabs={setSelectedTabs}
+            syncingTabs={syncingTabs}
+            onSyncSelectedTabs={syncSelectedTabs}
+            tabSyncProgress={tabSyncProgress}
           />
         )}
       </div>

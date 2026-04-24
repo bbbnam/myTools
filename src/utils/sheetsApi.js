@@ -20,16 +20,31 @@ async function callProxy(body) {
   return data;
 }
 
-// 월별 탭 이름 생성 (예: "2025-04")
 export function getSheetTabName(yearMonth) {
-  return yearMonth; // "2025-04" 형식 그대로 사용
+  return yearMonth;
 }
 
-// 특정 월 탭 초기화 (없으면 생성 + 헤더 삽입)
+// 스프레드시트의 모든 탭 목록 조회
+export async function getSheetTabs(spreadsheetId) {
+  const token = await getValidAccessToken();
+  const res = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || '탭 목록 조회 실패');
+
+  // "YYYY-MM" 형식인 탭만 필터링
+  const tabs = data.sheets?.map(s => s.properties.title) || [];
+  return tabs
+    .filter(t => /^\d{4}-\d{2}$/.test(t))
+    .sort()
+    .reverse(); // 최신 월 먼저
+}
+
 export async function initMonthSheet(spreadsheetId, yearMonth) {
   const tabName = getSheetTabName(yearMonth);
 
-  // 탭 존재 여부 확인
   try {
     const result = await callProxy({
       action: 'read',
@@ -37,17 +52,15 @@ export async function initMonthSheet(spreadsheetId, yearMonth) {
       range: `${tabName}!A1:J1`,
     });
     const firstRow = result.values?.[0];
-    if (firstRow && firstRow[0] === 'id') return; // 이미 초기화됨
+    if (firstRow && firstRow[0] === 'id') return;
   } catch {
-    // 탭 없음 → 생성
     try {
       await callProxy({ action: 'create_sheet', spreadsheetId, sheetTitle: tabName });
     } catch {
-      // 이미 있을 수도 있음 → 무시
+      // 이미 있을 수도 있음
     }
   }
 
-  // 헤더 삽입
   await callProxy({
     action: 'append',
     spreadsheetId,
@@ -56,9 +69,8 @@ export async function initMonthSheet(spreadsheetId, yearMonth) {
   });
 }
 
-// 특정 월 기록 1건 추가
 export async function appendRecord(spreadsheetId, record) {
-  const yearMonth = record.date.slice(0, 7); // "2025-04"
+  const yearMonth = record.date.slice(0, 7);
   await initMonthSheet(spreadsheetId, yearMonth);
   const tabName = getSheetTabName(yearMonth);
 
@@ -82,7 +94,6 @@ export async function appendRecord(spreadsheetId, record) {
   });
 }
 
-// 특정 월 기록 읽기
 export async function readMonthRecords(spreadsheetId, yearMonth) {
   const tabName = getSheetTabName(yearMonth);
   try {
@@ -105,16 +116,14 @@ export async function readMonthRecords(spreadsheetId, yearMonth) {
       memo:      r[9] || '',
     })).filter(r => r.date && r.systolic);
   } catch {
-    return []; // 해당 월 탭 없으면 빈 배열
+    return [];
   }
 }
 
-// 특정 월 기록 전체 덮어쓰기 (삭제 반영용)
 export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
   const tabName = getSheetTabName(yearMonth);
   await initMonthSheet(spreadsheetId, yearMonth);
 
-  // 기존 데이터 영역 클리어 후 재작성
   await callProxy({
     action: 'clear',
     spreadsheetId,
@@ -124,16 +133,9 @@ export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
   if (records.length === 0) return;
 
   const rows = records.map(r => [
-    r.id,
-    r.date,
-    r.time,
-    r.timeSlot,
-    r.systolic,
-    r.diastolic,
-    r.pulse || '',
-    r.weight || '',
-    r.bpLevel || '',
-    r.memo || '',
+    r.id, r.date, r.time, r.timeSlot,
+    r.systolic, r.diastolic, r.pulse || '',
+    r.weight || '', r.bpLevel || '', r.memo || '',
   ]);
 
   return callProxy({
@@ -144,22 +146,14 @@ export async function overwriteMonthRecords(spreadsheetId, yearMonth, records) {
   });
 }
 
-// 특정 월 기록 업로드
 export async function uploadMonthRecords(spreadsheetId, yearMonth, records) {
   await initMonthSheet(spreadsheetId, yearMonth);
   const tabName = getSheetTabName(yearMonth);
 
   const rows = records.map(r => [
-    r.id,
-    r.date,
-    r.time,
-    r.timeSlot,
-    r.systolic,
-    r.diastolic,
-    r.pulse || '',
-    r.weight || '',
-    r.bpLevel || '',
-    r.memo || '',
+    r.id, r.date, r.time, r.timeSlot,
+    r.systolic, r.diastolic, r.pulse || '',
+    r.weight || '', r.bpLevel || '', r.memo || '',
   ]);
 
   return callProxy({
@@ -170,20 +164,14 @@ export async function uploadMonthRecords(spreadsheetId, yearMonth, records) {
   });
 }
 
-// 스프레드시트 자동 생성
 export async function createAndInitSpreadsheet() {
   const token = await getValidAccessToken();
   const authHeader = `Bearer ${token}`;
 
   const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
     method: 'POST',
-    headers: {
-      'Authorization': authHeader,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      properties: { title: SPREADSHEET_TITLE },
-    }),
+    headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ properties: { title: SPREADSHEET_TITLE } }),
   });
 
   const created = await createRes.json();
@@ -192,7 +180,6 @@ export async function createAndInitSpreadsheet() {
   return created.spreadsheetId;
 }
 
-// 기존 스프레드시트 찾기
 export async function findExistingSpreadsheet() {
   const token = await getValidAccessToken();
 
