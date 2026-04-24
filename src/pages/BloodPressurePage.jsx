@@ -97,6 +97,7 @@ export default function BloodPressurePage() {
             syncingTabs={syncingTabs}
             onSyncSelectedTabs={syncSelectedTabs}
             tabSyncProgress={tabSyncProgress}
+            allMonths={allMonths}
           />
         )}
       </div>

@@ -12,6 +12,7 @@ export default function BpGoogleSync({
   sheetTabs, loadingTabs, onLoadTabs,
   selectedTabs, setSelectedTabs,
   syncingTabs, onSyncSelectedTabs, tabSyncProgress,
+  allMonths,
 }) {
   const isConnected = !!tokens;
   const [confirmSync,   setConfirmSync]   = useState(false);
@@ -151,7 +152,7 @@ export default function BpGoogleSync({
                             />
                             <span>{formatMonth(tab)}</span>
                             {/* 로컬에 이미 있는 월 표시 */}
-                            {loadLocalMonth(tab).length > 0 && (
+                            {allMonths.includes(tab) && (
                               <span className="bp-sync__tab-local">로컬 있음</span>
                             )}
                           </label>
