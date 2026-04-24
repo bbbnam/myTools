@@ -8,7 +8,7 @@ export default function BpGoogleSync({
   onSync, onUploadLocal, onCreateSheet,
   syncing, syncError, syncOk,
   hasUnsynced, localCount,
-  selectedMonth,
+  selectedMonth, setSelectedMonth,  // ← setSelectedMonth 추가
   sheetTabs, loadingTabs, onLoadTabs,
   selectedTabs, setSelectedTabs,
   syncingTabs, onSyncSelectedTabs, tabSyncProgress,
@@ -17,7 +17,7 @@ export default function BpGoogleSync({
   const isConnected = !!tokens;
   const [confirmSync,   setConfirmSync]   = useState(false);
   const [confirmUpload, setConfirmUpload] = useState(false);
-  const [showTabSync,   setShowTabSync]   = useState(false); // 탭 목록 UI 표시
+  const [showTabSync,   setShowTabSync]   = useState(false);
 
   const formatMonth = (ym) => {
     const [y, m] = ym.split('-');
@@ -32,6 +32,13 @@ export default function BpGoogleSync({
 
   const selectAll = () => setSelectedTabs([...sheetTabs]);
   const clearAll  = () => setSelectedTabs([]);
+
+  // 최근 12개월 목록 생성
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    return d.toISOString().slice(0, 7);
+  });
 
   return (
     <div className="bp-sync">
@@ -77,8 +84,22 @@ export default function BpGoogleSync({
               <label className="bp-sync__label">연결된 스프레드시트</label>
               <div className="bp-sync__sheet-id">{spreadsheetId}</div>
 
-              <div className="bp-sync__month-info">
-                📅 현재 동기화 대상: <b>{formatMonth(selectedMonth)}</b> 탭
+              {/* ── 동기화 대상 월 선택 드롭다운 ── */}
+              <div className="bp-sync__month-selector">
+                <label className="bp-sync__label">동기화 대상 월</label>
+                <select
+                  className="bp-sync__month-select"
+                  value={selectedMonth}
+                  onChange={e => setSelectedMonth(e.target.value)}
+                  disabled={syncing || syncingTabs}
+                >
+                  {monthOptions.map(ym => (
+                    <option key={ym} value={ym}>
+                      {formatMonth(ym)}
+                      {allMonths.includes(ym) ? ' ✓' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="bp-sync__warning">
@@ -87,7 +108,6 @@ export default function BpGoogleSync({
                 월별 탭 이름을 변경하지 마세요.
               </div>
 
-              {/* 이번 달 동기화 버튼들 */}
               <div className="bp-sync__actions">
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
@@ -108,7 +128,6 @@ export default function BpGoogleSync({
                 )}
               </div>
 
-              {/* 과거 월 일괄 동기화 섹션 */}
               <div className="bp-sync__divider" />
 
               <button
@@ -151,7 +170,6 @@ export default function BpGoogleSync({
                               disabled={syncingTabs}
                             />
                             <span>{formatMonth(tab)}</span>
-                            {/* 로컬에 이미 있는 월 표시 */}
                             {allMonths.includes(tab) && (
                               <span className="bp-sync__tab-local">로컬 있음</span>
                             )}
@@ -190,7 +208,6 @@ export default function BpGoogleSync({
         </div>
       )}
 
-      {/* 이번 달 동기화 확인 팝업 */}
       {confirmSync && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">
@@ -216,7 +233,6 @@ export default function BpGoogleSync({
         </div>
       )}
 
-      {/* 업로드 확인 팝업 */}
       {confirmUpload && (
         <div className="bp-sync__overlay">
           <div className="bp-sync__dialog">

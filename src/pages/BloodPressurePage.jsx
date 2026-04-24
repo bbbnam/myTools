@@ -89,6 +89,7 @@ export default function BloodPressurePage() {
             hasUnsynced={hasUnsynced}
             localCount={records.length}
             selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
             sheetTabs={sheetTabs}
             loadingTabs={loadingTabs}
             onLoadTabs={loadSheetTabs}
