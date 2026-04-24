@@ -27,7 +27,9 @@ function getAllMonths() {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && key.startsWith('bp_records_')) {
-      months.push(key.replace('bp_records_', ''));
+      const yearMonth = key.replace('bp_records_', '');
+      const data = loadLocalMonth(yearMonth);
+      if (data.length > 0) months.push(yearMonth); // ← 빈 월 제외
     }
   }
   return months.sort().reverse();
