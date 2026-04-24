@@ -1,15 +1,17 @@
 // src/components/blood-pressure/BpGoogleSync.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './BpGoogleSync.css';
 
 export default function BpGoogleSync({
   tokens, login, logout,
   spreadsheetId,
-  onSync, onCreateSheet,
+  onSync, onUploadLocal, onCreateSheet,
   syncing, syncError, syncOk,
-  hasUnsynced,
+  hasUnsynced, localCount,
 }) {
   const isConnected = !!tokens;
+  const [confirmSync, setConfirmSync]   = useState(false); // 동기화 확인 팝업
+  const [confirmUpload, setConfirmUpload] = useState(false); // 업로드 확인 팝업
 
   return (
     <div className="bp-sync">
@@ -35,7 +37,6 @@ export default function BpGoogleSync({
         <div className="bp-sync__connected-area">
 
           {!spreadsheetId ? (
-            /* ── 시트 없음 → 자동 생성 ── */
             <div className="bp-sync__create-area">
               <p className="bp-sync__desc">
                 버튼을 누르면 Google Drive에 <b>"MyTools 혈압기록"</b> 스프레드시트가
@@ -53,7 +54,6 @@ export default function BpGoogleSync({
               </button>
             </div>
           ) : (
-            /* ── 시트 있음 → 동기화 ── */
             <>
               <label className="bp-sync__label">연결된 스프레드시트</label>
               <div className="bp-sync__sheet-id">{spreadsheetId}</div>
@@ -66,31 +66,92 @@ export default function BpGoogleSync({
               </div>
 
               <div className="bp-sync__actions">
-                {/* 동기화 버튼 하나로 통합 */}
+                {/* 시트 → 로컬 동기화 */}
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
-                  onClick={onSync}
+                  onClick={() => setConfirmSync(true)}
                   disabled={syncing}
                 >
-                  {syncing
-                    ? '동기화 중...'
-                    : hasUnsynced
-                      ? '🔄 동기화 (미전송 기록 있음)'
-                      : '🔄 동기화'}
+                  {syncing ? '동기화 중...' : '☁ 시트 데이터로 동기화'}
                 </button>
-                <button
-                  className="bp-sync__btn bp-sync__btn--logout"
-                  onClick={logout}
-                >
+
+                {/* 로컬 → 시트 업로드 (미전송 있을 때만 활성화) */}
+                {hasUnsynced && (
+                  <button
+                    className="bp-sync__btn bp-sync__btn--push"
+                    onClick={() => setConfirmUpload(true)}
+                    disabled={syncing}
+                  >
+                    ↑ 로컬 기록 시트에 업로드 ({localCount}건)
+                  </button>
+                )}
+
+                <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
                   연결 해제
                 </button>
               </div>
             </>
           )}
 
-          {syncOk    && <p className="bp-sync__ok">✓ 동기화 완료!</p>}
+          {syncOk    && <p className="bp-sync__ok">✓ 완료!</p>}
           {syncError && <p className="bp-sync__err">{syncError}</p>}
+        </div>
+      )}
 
+      {/* ── 시트 동기화 확인 팝업 ── */}
+      {confirmSync && (
+        <div className="bp-sync__overlay">
+          <div className="bp-sync__dialog">
+            <p className="bp-sync__dialog-title">⚠️ 동기화 확인</p>
+            <p className="bp-sync__dialog-desc">
+              시트 데이터로 동기화하면 <b>현재 기기의 로컬 기록이 모두 삭제</b>되고
+              Google Sheets 데이터로 교체됩니다.
+            </p>
+            <p className="bp-sync__dialog-desc">
+              로컬에만 있는 기록이 있다면 먼저 <b>"로컬 기록 시트에 업로드"</b>를 해주세요.
+            </p>
+            <div className="bp-sync__dialog-btns">
+              <button
+                className="bp-sync__dialog-btn bp-sync__dialog-btn--cancel"
+                onClick={() => setConfirmSync(false)}
+              >
+                취소
+              </button>
+              <button
+                className="bp-sync__dialog-btn bp-sync__dialog-btn--confirm"
+                onClick={() => { setConfirmSync(false); onSync(); }}
+              >
+                동기화 진행
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 로컬 업로드 확인 팝업 ── */}
+      {confirmUpload && (
+        <div className="bp-sync__overlay">
+          <div className="bp-sync__dialog">
+            <p className="bp-sync__dialog-title">업로드 확인</p>
+            <p className="bp-sync__dialog-desc">
+              로컬 기록 <b>{localCount}건</b>을 Google Sheets에 업로드합니다.
+              기존 시트 데이터에 추가됩니다.
+            </p>
+            <div className="bp-sync__dialog-btns">
+              <button
+                className="bp-sync__dialog-btn bp-sync__dialog-btn--cancel"
+                onClick={() => setConfirmUpload(false)}
+              >
+                취소
+              </button>
+              <button
+                className="bp-sync__dialog-btn bp-sync__dialog-btn--confirm"
+                onClick={() => { setConfirmUpload(false); onUploadLocal(); }}
+              >
+                업로드
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

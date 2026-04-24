@@ -16,14 +16,17 @@ const TABS = [
 ];
 
 export default function BloodPressurePage() {
-  const [tab, setTab]     = useState('input');
+  const [tab, setTab]       = useState('input');
   const [saving, setSaving] = useState(false);
 
   const {
-    records, addRecord, syncWithSheets, createSpreadsheet,
+    records, addRecord, deleteRecord,
+    syncWithSheets, uploadLocalToSheets,
+    createSpreadsheet,
     tokens, login, logout,
-    spreadsheetId,        // ← setSpreadsheetId 제거
-    syncing, syncError, syncOk, hasUnsynced, deleteRecord
+    spreadsheetId,
+    syncing, syncError, syncOk,
+    hasUnsynced,
   } = useBloodPressure();
 
   const handleSubmit = async (form) => {
@@ -39,7 +42,6 @@ export default function BloodPressurePage() {
         <p className="bp-page__sub">총 {records.length}건 기록됨</p>
       </header>
 
-      {/* 탭 */}
       <div className="bp-page__tabs">
         {TABS.map(t => (
           <button
@@ -53,32 +55,30 @@ export default function BloodPressurePage() {
         ))}
       </div>
 
-      {/* 탭 콘텐츠 */}
       <div className="bp-page__content">
         {tab === 'input' && (
           <BpInput onSubmit={handleSubmit} loading={saving || syncing} />
         )}
-
         {tab === 'chart' && (
           <>
-            <BpStats  records={records} />
-            <BpChart  records={records} />
+            <BpStats records={records} />
+            <BpChart records={records} />
           </>
         )}
-
         {tab === 'history' && (
-          <BpHistory records={records} onDelete={deleteRecord}/>
+          <BpHistory records={records} onDelete={deleteRecord} />
         )}
-
         {tab === 'sync' && (
           <BpGoogleSync
-              tokens={tokens} login={login} logout={logout}
-              spreadsheetId={spreadsheetId}
-              onSync={syncWithSheets}
-              onCreateSheet={createSpreadsheet}
-              syncing={syncing} syncError={syncError} syncOk={syncOk}
-              hasUnsynced={hasUnsynced}
-            />
+            tokens={tokens} login={login} logout={logout}
+            spreadsheetId={spreadsheetId}
+            onSync={syncWithSheets}
+            onUploadLocal={uploadLocalToSheets}
+            onCreateSheet={createSpreadsheet}
+            syncing={syncing} syncError={syncError} syncOk={syncOk}
+            hasUnsynced={hasUnsynced}
+            localCount={records.length}
+          />
         )}
       </div>
     </div>

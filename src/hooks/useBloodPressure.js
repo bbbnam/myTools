@@ -122,49 +122,22 @@ export function useBloodPressure() {
     return record;
   }, [records, tokens, spreadsheetId, syncedIds]);
 
-  // ── 양방향 동기화 (불러오기 + 업로드 통합) ──
+  // ── 시트 데이터로 로컬 완전 교체 ──
   const syncWithSheets = useCallback(async () => {
     if (!tokens || !spreadsheetId) return;
     setSyncing(true);
     setSyncError('');
     try {
-      // 1. 시트에서 먼저 읽기
+      // 시트에서 읽어서 로컬 완전 교체
       const remote = await readAllRecords(spreadsheetId);
-      const remoteIds = new Set(remote.map(r => r.id).filter(Boolean));
+      remote.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 
-      const currentRecords = loadLocal();
+      setRecords(remote);
+      saveLocal(remote);
 
-      // 2. 로컬에만 있는 것 (시트에 없는 것) → 업로드 대상
-      const toUpload = currentRecords
-        .filter(r => !r.id || !remoteIds.has(r.id))
-        .map(r => ({ ...r, id: r.id || generateId() })); // id 없으면 신규 부여
-
-      // 3. 업로드
-      if (toUpload.length > 0) {
-        await uploadAllRecords(spreadsheetId, toUpload);
-      }
-
-      // 4. 로컬 기록 id 업데이트 (구버전 id 없는 기록 처리)
-      const idMap = new Map(toUpload.map(r => [`${r.date}_${r.time}`, r.id]));
-      const updatedLocal = currentRecords.map(r => ({
-        ...r,
-        id: r.id || idMap.get(`${r.date}_${r.time}`) || generateId(),
-      }));
-
-      // 5. 시트에만 있는 것 (로컬에 없는 것) → 로컬에 추가
-      const localIds = new Set(updatedLocal.map(r => r.id).filter(Boolean));
-      const remoteOnly = remote.filter(r => r.id && !localIds.has(r.id));
-
-      // 6. 최종 머지
-      const all = [...updatedLocal, ...remoteOnly];
-      all.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
-
-      setRecords(all);
-      saveLocal(all);
-
-      // 7. syncedIds 전체 갱신
+      // syncedIds 갱신
       const newIds = new Set();
-      all.forEach(r => { if (r.id) newIds.add(r.id); });
+      remote.forEach(r => { if (r.id) newIds.add(r.id); });
       setSyncedIds(newIds);
       saveSyncedIds(newIds);
 
@@ -172,6 +145,35 @@ export function useBloodPressure() {
       setTimeout(() => setSyncOk(false), 2500);
     } catch (e) {
       setSyncError('동기화 실패: ' + e.message);
+    } finally {
+      setSyncing(false);
+    }
+  }, [tokens, spreadsheetId]);
+
+  // ── 로컬 기록 시트에 업로드 (연동 전 로컬 데이터 백업용) ──
+  const uploadLocalToSheets = useCallback(async () => {
+    if (!tokens || !spreadsheetId) return;
+    setSyncing(true);
+    setSyncError('');
+    try {
+      const currentRecords = loadLocal();
+      const withIds = currentRecords.map(r => ({
+        ...r,
+        id: r.id || generateId(),
+      }));
+      await uploadAllRecords(spreadsheetId, withIds);
+      setRecords(withIds);
+      saveLocal(withIds);
+
+      const newIds = new Set();
+      withIds.forEach(r => newIds.add(r.id));
+      setSyncedIds(newIds);
+      saveSyncedIds(newIds);
+
+      setSyncOk(true);
+      setTimeout(() => setSyncOk(false), 2500);
+    } catch (e) {
+      setSyncError('업로드 실패: ' + e.message);
     } finally {
       setSyncing(false);
     }
@@ -220,10 +222,10 @@ export function useBloodPressure() {
 
   return {
     records, addRecord, deleteRecord,
-    syncWithSheets, // ← pullFromSheets + pushAllToSheets 대신 이걸로 통합
+    syncWithSheets, uploadLocalToSheets,
     createSpreadsheet,
     tokens, login, logout,
-    spreadsheetId, setSpreadsheetId,
+    spreadsheetId,
     syncing, syncError, syncOk,
     hasUnsynced,
   };

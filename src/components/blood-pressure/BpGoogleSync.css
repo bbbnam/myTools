@@ -259,3 +259,70 @@
   flex-direction: column;
   gap: 12px;
 }
+
+.bp-sync__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.bp-sync__dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 24px 20px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bp-sync__dialog-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bp-sync__dialog-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.bp-sync__dialog-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.bp-sync__dialog-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.bp-sync__dialog-btn--cancel {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.bp-sync__dialog-btn--confirm {
+  background: #e53935;
+  color: #fff;
+}
+
+.bp-sync__dialog-btn--confirm:hover {
+  background: #c62828;
+}
