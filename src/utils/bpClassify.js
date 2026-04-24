@@ -40,10 +40,8 @@ export const BP_LEVELS = [
 ];
 
 export function classifyBP(systolic, diastolic) {
-  // 위기 먼저 체크
   const crisis = BP_LEVELS.find(l => l.id === 'crisis');
   if (crisis.check(systolic, diastolic)) return crisis;
-
   return BP_LEVELS.find(l => l.check(systolic, diastolic)) || BP_LEVELS[0];
 }
 
@@ -55,7 +53,6 @@ export const TIME_SLOTS = [
 ];
 
 export function formatDate(dateStr) {
-  // "2024-01-15" → "1월 15일"
   const [, m, d] = dateStr.split('-');
   return `${parseInt(m)}월 ${parseInt(d)}일`;
 }
@@ -66,4 +63,9 @@ export function todayStr() {
 
 export function nowTimeStr() {
   return new Date().toTimeString().slice(0, 5);
+}
+
+// ← 추가: 고유 ID 생성
+export function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }

@@ -3,7 +3,8 @@
 import { getValidAccessToken } from './googleAuth';
 
 const SPREADSHEET_TITLE = 'MyTools 혈압기록';
-const HEADERS = ['날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
+// id 컬럼 맨 앞에 추가 (A열)
+const HEADERS = ['id', '날짜', '시간', '시간대', '수축기(mmHg)', '이완기(mmHg)', '맥박(bpm)', '몸무게(kg)', '혈압단계', '메모'];
 
 async function callProxy(body) {
   const token = await getValidAccessToken();
@@ -23,19 +24,18 @@ async function callProxy(body) {
 // 시트 초기화 (헤더 삽입) — 최초 1회
 export async function initSheet(spreadsheetId) {
   try {
-    // 헤더 행이 있는지 확인 (시트명 없이 → 첫 번째 탭 자동 선택)
     const result = await callProxy({
       action: 'read',
       spreadsheetId,
-      range: `A1:I1`,
+      range: `A1:J1`,
     });
     const firstRow = result.values?.[0];
-    if (firstRow && firstRow[0] === '날짜') return; // 이미 초기화됨
+    // id 컬럼이 있는 새 헤더 형식인지 확인
+    if (firstRow && firstRow[0] === 'id') return;
   } catch {
-    // 읽기 실패해도 무시하고 헤더 삽입 시도
+    // 읽기 실패해도 무시
   }
 
-  // 헤더 삽입
   await callProxy({
     action: 'append',
     spreadsheetId,
@@ -48,20 +48,21 @@ export async function initSheet(spreadsheetId) {
 export async function appendRecord(spreadsheetId, record) {
   await initSheet(spreadsheetId);
   const row = [
-    record.date,
-    record.time,
-    record.timeSlot,
-    record.systolic,
-    record.diastolic,
-    record.pulse,
-    record.weight || '',
-    record.bpLevel,
-    record.memo || '',
+    record.id,          // A: id
+    record.date,        // B: 날짜
+    record.time,        // C: 시간
+    record.timeSlot,    // D: 시간대
+    record.systolic,    // E: 수축기
+    record.diastolic,   // F: 이완기
+    record.pulse,       // G: 맥박
+    record.weight || '', // H: 몸무게
+    record.bpLevel,     // I: 혈압단계
+    record.memo || '',  // J: 메모
   ];
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `A:I`,
+    range: `A:J`,
     values: [row],
   });
 }
@@ -71,20 +72,21 @@ export async function readAllRecords(spreadsheetId) {
   const result = await callProxy({
     action: 'read',
     spreadsheetId,
-    range: `A2:I`, // 헤더 제외, 첫 번째 탭 자동 선택
+    range: `A2:J`,
   });
 
   const rows = result.values || [];
   return rows.map(r => ({
-    date:      r[0] || '',
-    time:      r[1] || '',
-    timeSlot:  r[2] || '',
-    systolic:  Number(r[3]) || 0,
-    diastolic: Number(r[4]) || 0,
-    pulse:     Number(r[5]) || 0,
-    weight:    r[6] ? Number(r[6]) : null,
-    bpLevel:   r[7] || '',
-    memo:      r[8] || '',
+    id:        r[0] || '',
+    date:      r[1] || '',
+    time:      r[2] || '',
+    timeSlot:  r[3] || '',
+    systolic:  Number(r[4]) || 0,
+    diastolic: Number(r[5]) || 0,
+    pulse:     Number(r[6]) || 0,
+    weight:    r[7] ? Number(r[7]) : null,
+    bpLevel:   r[8] || '',
+    memo:      r[9] || '',
   })).filter(r => r.date && r.systolic);
 }
 
@@ -93,6 +95,7 @@ export async function uploadAllRecords(spreadsheetId, records) {
   await initSheet(spreadsheetId);
 
   const rows = records.map(r => [
+    r.id,
     r.date,
     r.time,
     r.timeSlot,
@@ -107,7 +110,7 @@ export async function uploadAllRecords(spreadsheetId, records) {
   return callProxy({
     action: 'append',
     spreadsheetId,
-    range: `A:I`,
+    range: `A:J`,
     values: rows,
   });
 }
@@ -117,7 +120,6 @@ export async function createAndInitSpreadsheet() {
   const token = await getValidAccessToken();
   const authHeader = `Bearer ${token}`;
 
-  // 1. 스프레드시트 생성 (첫 번째 탭은 기본 "Sheet1" 또는 "시트1" 로 자동 생성)
   const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
     method: 'POST',
     headers: {
@@ -134,7 +136,6 @@ export async function createAndInitSpreadsheet() {
 
   const spreadsheetId = created.spreadsheetId;
 
-  // 2. 헤더 삽입 (첫 번째 탭 자동 선택)
   await callProxy({
     action: 'append',
     spreadsheetId,

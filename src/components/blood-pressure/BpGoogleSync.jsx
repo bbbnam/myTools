@@ -4,8 +4,8 @@ import './BpGoogleSync.css';
 
 export default function BpGoogleSync({
   tokens, login, logout,
-  spreadsheetId, setSpreadsheetId,
-  onPull, onPushAll, onCreateSheet, recordCount,
+  spreadsheetId,
+  onSync, onCreateSheet,
   syncing, syncError, syncOk,
   hasUnsynced,
 }) {
@@ -35,7 +35,7 @@ export default function BpGoogleSync({
         <div className="bp-sync__connected-area">
 
           {!spreadsheetId ? (
-            /* ── 시트 없음 → 자동 생성 안내 ── */
+            /* ── 시트 없음 → 자동 생성 ── */
             <div className="bp-sync__create-area">
               <p className="bp-sync__desc">
                 버튼을 누르면 Google Drive에 <b>"MyTools 혈압기록"</b> 스프레드시트가
@@ -48,21 +48,16 @@ export default function BpGoogleSync({
               >
                 {syncing ? '생성 중...' : '📄 스프레드시트 자동 생성'}
               </button>
-              {/* ── 연결 해제 버튼 추가 ── */}
-              <button
-                className="bp-sync__btn bp-sync__btn--logout"
-                onClick={logout}
-              >
+              <button className="bp-sync__btn bp-sync__btn--logout" onClick={logout}>
                 연결 해제
               </button>
             </div>
           ) : (
-            /* ── 시트 있음 → 동기화 버튼들 ── */
+            /* ── 시트 있음 → 동기화 ── */
             <>
               <label className="bp-sync__label">연결된 스프레드시트</label>
               <div className="bp-sync__sheet-id">{spreadsheetId}</div>
 
-              {/* 주의 안내 문구 */}
               <div className="bp-sync__warning">
                 ⚠️ Google Drive에서 <b>"MyTools 혈압기록"</b> 파일명을 변경하면
                 다른 기기에서 로그인 시 새 스프레드시트가 생성될 수 있습니다.
@@ -71,19 +66,17 @@ export default function BpGoogleSync({
               </div>
 
               <div className="bp-sync__actions">
+                {/* 동기화 버튼 하나로 통합 */}
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
-                  onClick={onPull}
+                  onClick={onSync}
                   disabled={syncing}
                 >
-                  {syncing ? '동기화 중...' : '☁ Sheets에서 불러오기'}
-                </button>
-                <button
-                  className="bp-sync__btn bp-sync__btn--push"
-                  onClick={onPushAll}
-                  disabled={syncing || !hasUnsynced}
-                >
-                  {hasUnsynced ? `↑ 로컬 전체 업로드 (${recordCount}건)` : '✓ 모두 동기화됨'}
+                  {syncing
+                    ? '동기화 중...'
+                    : hasUnsynced
+                      ? '🔄 동기화 (미전송 기록 있음)'
+                      : '🔄 동기화'}
                 </button>
                 <button
                   className="bp-sync__btn bp-sync__btn--logout"

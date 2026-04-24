@@ -20,7 +20,7 @@ export default function BloodPressurePage() {
   const [saving, setSaving] = useState(false);
 
   const {
-    records, addRecord, pullFromSheets, pushAllToSheets, createSpreadsheet,
+    records, addRecord, syncWithSheets, createSpreadsheet,
     tokens, login, logout,
     spreadsheetId, setSpreadsheetId,
     syncing, syncError, syncOk, hasUnsynced, deleteRecord
@@ -72,15 +72,13 @@ export default function BloodPressurePage() {
 
         {tab === 'sync' && (
           <BpGoogleSync
-            tokens={tokens} login={login} logout={logout}
-            spreadsheetId={spreadsheetId} setSpreadsheetId={setSpreadsheetId}
-            onPull={pullFromSheets}
-            onPushAll={pushAllToSheets}
-            onCreateSheet={createSpreadsheet}
-            recordCount={records.length}
-            syncing={syncing} syncError={syncError} syncOk={syncOk}
-            hasUnsynced={hasUnsynced}
-          />
+              tokens={tokens} login={login} logout={logout}
+              spreadsheetId={spreadsheetId}
+              onSync={syncWithSheets}
+              onCreateSheet={createSpreadsheet}
+              syncing={syncing} syncError={syncError} syncOk={syncOk}
+              hasUnsynced={hasUnsynced}
+            />
         )}
       </div>
     </div>
