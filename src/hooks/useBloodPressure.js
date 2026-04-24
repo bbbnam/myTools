@@ -24,8 +24,17 @@ function saveSyncedIds(ids) {
   localStorage.setItem(SYNCED_IDS_KEY, JSON.stringify([...ids]));
 }
 
+// 날짜+시간 기준 최신순 정렬 (9:30 vs 09:30 형식 차이 처리)
+function sortByDateTime(records) {
+  return [...records].sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.time.padStart(5, '0')}`);
+    const dateB = new Date(`${b.date}T${b.time.padStart(5, '0')}`);
+    return dateB - dateA;
+  });
+}
+
 export function useBloodPressure() {
-  const [records, setRecords]             = useState(loadLocal);
+  const [records, setRecords]             = useState(() => sortByDateTime(loadLocal()));
   const [tokens, setTokens]               = useState(loadTokens);
   const [spreadsheetId, setSpreadsheetId] = useState(
     () => localStorage.getItem(SHEET_ID_KEY) || ''
@@ -97,7 +106,7 @@ export function useBloodPressure() {
       levelId:   level.id,
     };
 
-    const next = [record, ...records];
+    const next = sortByDateTime([record, ...records]);
     setRecords(next);
     saveLocal(next);
 
@@ -128,16 +137,14 @@ export function useBloodPressure() {
     setSyncing(true);
     setSyncError('');
     try {
-      // 시트에서 읽어서 로컬 완전 교체
       const remote = await readAllRecords(spreadsheetId);
-      remote.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+      const sorted = sortByDateTime(remote);
 
-      setRecords(remote);
-      saveLocal(remote);
+      setRecords(sorted);
+      saveLocal(sorted);
 
-      // syncedIds 갱신
       const newIds = new Set();
-      remote.forEach(r => { if (r.id) newIds.add(r.id); });
+      sorted.forEach(r => { if (r.id) newIds.add(r.id); });
       setSyncedIds(newIds);
       saveSyncedIds(newIds);
 
@@ -150,7 +157,7 @@ export function useBloodPressure() {
     }
   }, [tokens, spreadsheetId]);
 
-  // ── 로컬 기록 시트에 업로드 (연동 전 로컬 데이터 백업용) ──
+  // ── 로컬 기록 시트에 업로드 ──
   const uploadLocalToSheets = useCallback(async () => {
     if (!tokens || !spreadsheetId) return;
     setSyncing(true);
@@ -162,11 +169,13 @@ export function useBloodPressure() {
         id: r.id || generateId(),
       }));
       await uploadAllRecords(spreadsheetId, withIds);
-      setRecords(withIds);
-      saveLocal(withIds);
+
+      const sorted = sortByDateTime(withIds);
+      setRecords(sorted);
+      saveLocal(sorted);
 
       const newIds = new Set();
-      withIds.forEach(r => newIds.add(r.id));
+      sorted.forEach(r => newIds.add(r.id));
       setSyncedIds(newIds);
       saveSyncedIds(newIds);
 
