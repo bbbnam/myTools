@@ -21,8 +21,9 @@ export default async function handler(req, res) {
     let googleRes;
 
     if (action === 'append') {
+      // RAW: 값을 문자열 그대로 저장 → 날짜/시간 자동변환 방지
       googleRes = await fetch(
-        `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
         {
           method: 'POST',
           headers: { 'Authorization': authHeader, 'Content-Type': 'application/json' },
@@ -35,7 +36,6 @@ export default async function handler(req, res) {
         { headers: { 'Authorization': authHeader } }
       );
     } else if (action === 'clear') {
-      // 특정 범위 데이터 클리어
       googleRes = await fetch(
         `${SHEETS_BASE}/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`,
         {
@@ -44,7 +44,6 @@ export default async function handler(req, res) {
         }
       );
     } else if (action === 'create_sheet') {
-      // 월별 탭 생성 (sheetTitle 지정 가능)
       googleRes = await fetch(
         `${SHEETS_BASE}/${spreadsheetId}:batchUpdate`,
         {

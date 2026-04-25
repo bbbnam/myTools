@@ -1,9 +1,9 @@
 // src/components/blood-pressure/BpInput.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TIME_SLOTS, todayStr, nowTimeStr } from '../../utils/bpClassify';
 import './BpInput.css';
 
-const empty = () => ({
+const emptyForm = () => ({
   date:      todayStr(),
   time:      nowTimeStr(),
   timeSlot:  'morning',
@@ -15,8 +15,17 @@ const empty = () => ({
 });
 
 export default function BpInput({ onSubmit, loading }) {
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
+
+  // 입력 탭에 올 때마다 날짜/시간을 오늘 기준으로 갱신
+  useEffect(() => {
+    setForm(f => ({
+      ...f,
+      date: todayStr(),
+      time: nowTimeStr(),
+    }));
+  }, []);
 
   const set = (key, val) => {
     setForm(f => ({ ...f, [key]: val }));
@@ -27,8 +36,8 @@ export default function BpInput({ onSubmit, loading }) {
     const e = {};
     if (!form.systolic  || form.systolic  < 60 || form.systolic  > 250) e.systolic  = '60~250 사이 입력';
     if (!form.diastolic || form.diastolic < 40 || form.diastolic > 150) e.diastolic = '40~150 사이 입력';
-    if (form.pulse && (form.pulse < 30 || form.pulse > 250))            e.pulse     = '30~250 사이 입력';
-    if (form.weight && (form.weight < 20 || form.weight > 300))         e.weight    = '20~300 사이 입력';
+    if (form.pulse  && (form.pulse  < 30  || form.pulse  > 250)) e.pulse  = '30~250 사이 입력';
+    if (form.weight && (form.weight < 20  || form.weight > 300)) e.weight = '20~300 사이 입력';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -36,7 +45,9 @@ export default function BpInput({ onSubmit, loading }) {
   const handleSubmit = async () => {
     if (!validate()) return;
     await onSubmit(form);
-    setForm(empty());
+    // 저장 후 폼 초기화 — 날짜/시간은 현재 시각으로
+    setForm(emptyForm());
+    setErrors({});
   };
 
   return (
@@ -104,7 +115,8 @@ export default function BpInput({ onSubmit, loading }) {
 
       {/* 메모 */}
       <label className="bp-input__label bp-input__label--full">메모
-        <input className="bp-input__field" type="text" placeholder="약 복용, 운동 후, 카페인 섭취 등..."
+        <input className="bp-input__field" type="text"
+          placeholder="약 복용, 운동 후, 카페인 섭취 등..."
           value={form.memo} onChange={e => set('memo', e.target.value)} maxLength={100} />
       </label>
 
