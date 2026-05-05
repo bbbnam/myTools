@@ -168,6 +168,8 @@ export function useBloodPressure() {
     if (yearMonth === selectedMonth) setRecords(next);
     refreshAllMonths();
 
+    let sheetSaveResult = { saved: false, error: '' };
+
     if (tokens && spreadsheetId) {
       setSyncing(true);
       setSyncError('');
@@ -178,15 +180,18 @@ export function useBloodPressure() {
         setSyncedIds(newIds);
         saveSyncedIds(newIds);
         setSyncOk(true);
+        sheetSaveResult = { saved: true, error: '' };
         setTimeout(() => setSyncOk(false), 2500);
       } catch (e) {
-        setSyncError('Sheets 저장 실패: ' + e.message);
+        const message = 'Sheets 저장 실패: ' + e.message;
+        sheetSaveResult = { saved: false, error: message };
+        setSyncError(message);
       } finally {
         setSyncing(false);
       }
     }
 
-    return record;
+    return { record, sheetSave: sheetSaveResult };
   }, [selectedMonth, tokens, spreadsheetId, syncedIds, refreshAllMonths]);
 
   // 선택 월 시트 → 로컬 동기화

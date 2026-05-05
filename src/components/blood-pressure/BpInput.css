@@ -130,3 +130,23 @@
 .bp-input__submit:disabled {
   opacity: 0.5;
 }
+
+.bp-input__notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.bp-input__notice--success {
+  background: rgba(76, 175, 80, 0.14);
+  color: #81c784;
+}
+
+.bp-input__notice--warning {
+  background: rgba(255, 193, 7, 0.14);
+  color: #ffca28;
+}

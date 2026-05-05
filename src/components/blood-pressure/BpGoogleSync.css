@@ -72,6 +72,17 @@
   line-height: 1.6;
 }
 
+.bp-sync__auto-save-note {
+  margin: 0;
+  font-size: 12px;
+  color: #81c784;
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.22);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.6;
+}
+
 .bp-sync__actions {
   display: flex;
   gap: 8px;
