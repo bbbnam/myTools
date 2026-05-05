@@ -5,6 +5,7 @@
 
 import LedBoardPage      from './pages/LedBoardPage';
 import BloodPressurePage from './pages/BloodPressurePage';
+import TemplateMemoPage  from './pages/TemplateMemoPage';
 
 export const routes = [
   {
@@ -23,6 +24,15 @@ export const routes = [
     icon: '❤️',
     description: '혈압·몸무게 기록 및 Google Sheets 연동',
     component: BloodPressurePage,
+    enabled: true,
+  },
+  {
+    id: 'template-memo',
+    path: '/memo',
+    label: '템플릿 메모',
+    icon: '📝',
+    description: '템플릿 기반 다이어리 메모와 검색/달력 조회',
+    component: TemplateMemoPage,
     enabled: true,
   },
 ];
