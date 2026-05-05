@@ -14,7 +14,7 @@ const emptyForm = () => ({
   memo:      '',
 });
 
-export default function BpInput({ onSubmit, loading }) {
+export default function BpInput({ onSubmit, loading, notice }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
@@ -123,6 +123,12 @@ export default function BpInput({ onSubmit, loading }) {
       <button className="bp-input__submit" onClick={handleSubmit} disabled={loading}>
         {loading ? '저장 중...' : '기록 저장'}
       </button>
+
+      {notice && (
+        <p className={`bp-input__notice bp-input__notice--${notice.type}`}>
+          {notice.message}
+        </p>
+      )}
     </div>
   );
 }

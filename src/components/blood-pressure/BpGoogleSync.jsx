@@ -5,9 +5,8 @@ import './BpGoogleSync.css';
 export default function BpGoogleSync({
   tokens, login, logout,
   spreadsheetId,
-  onSync, onUploadLocal, onCreateSheet,
+  onSync, onCreateSheet,
   syncing, syncError, syncOk,
-  hasUnsynced, localCount,
   selectedMonth, setSelectedMonth,  // ← setSelectedMonth 추가
   sheetTabs, loadingTabs, onLoadTabs,
   selectedTabs, setSelectedTabs,
@@ -16,7 +15,6 @@ export default function BpGoogleSync({
 }) {
   const isConnected = !!tokens;
   const [confirmSync,   setConfirmSync]   = useState(false);
-  const [confirmUpload, setConfirmUpload] = useState(false);
   const [showTabSync,   setShowTabSync]   = useState(false);
 
   const formatMonth = (ym) => {
@@ -108,6 +106,10 @@ export default function BpGoogleSync({
                 월별 탭 이름을 변경하지 마세요.
               </div>
 
+              <p className="bp-sync__auto-save-note">
+                새 혈압 기록은 입력 탭에서 저장하는 즉시 Google Sheets에도 자동 저장됩니다.
+              </p>
+
               <div className="bp-sync__actions">
                 <button
                   className="bp-sync__btn bp-sync__btn--pull"
@@ -116,16 +118,6 @@ export default function BpGoogleSync({
                 >
                   {syncing ? '동기화 중...' : `☁ ${formatMonth(selectedMonth)} 동기화`}
                 </button>
-
-                {hasUnsynced && (
-                  <button
-                    className="bp-sync__btn bp-sync__btn--push"
-                    onClick={() => setConfirmUpload(true)}
-                    disabled={syncing || syncingTabs}
-                  >
-                    ↑ 로컬 기록 업로드 ({localCount}건)
-                  </button>
-                )}
               </div>
 
               <div className="bp-sync__divider" />
@@ -233,27 +225,6 @@ export default function BpGoogleSync({
         </div>
       )}
 
-      {confirmUpload && (
-        <div className="bp-sync__overlay">
-          <div className="bp-sync__dialog">
-            <p className="bp-sync__dialog-title">업로드 확인</p>
-            <p className="bp-sync__dialog-desc">
-              <b>{formatMonth(selectedMonth)}</b> 로컬 기록 <b>{localCount}건</b>을
-              Google Sheets에 업로드합니다.
-            </p>
-            <div className="bp-sync__dialog-btns">
-              <button
-                className="bp-sync__dialog-btn bp-sync__dialog-btn--cancel"
-                onClick={() => setConfirmUpload(false)}
-              >취소</button>
-              <button
-                className="bp-sync__dialog-btn bp-sync__dialog-btn--confirm"
-                onClick={() => { setConfirmUpload(false); onUploadLocal(); }}
-              >업로드</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -18,11 +18,12 @@ const TABS = [
 export default function BloodPressurePage() {
   const [tab, setTab]       = useState('input');
   const [saving, setSaving] = useState(false);
+  const [saveNotice, setSaveNotice] = useState(null);
 
   const {
     records, addRecord, deleteRecord,
     selectedMonth, setSelectedMonth, allMonths,
-    syncWithSheets, uploadLocalToSheets,
+    syncWithSheets,
     createSpreadsheet,
     tokens, login, logout,
     spreadsheetId,
@@ -35,7 +36,24 @@ export default function BloodPressurePage() {
 
   const handleSubmit = async (form) => {
     setSaving(true);
-    try { await addRecord(form); setTab('chart'); }
+    setSaveNotice(null);
+    try {
+      const result = await addRecord(form);
+      if (result?.sheetSave?.error) {
+        setSaveNotice({
+          type: 'warning',
+          message: `로컬에는 저장됐지만 Google Sheets 즉시 저장은 실패했습니다. ${result.sheetSave.error}`,
+        });
+        return;
+      }
+
+      setSaveNotice(
+        result?.sheetSave?.saved
+          ? { type: 'success', message: '로컬과 Google Sheets에 저장됐습니다.' }
+          : { type: 'success', message: '로컬에 저장됐습니다.' }
+      );
+      setTab('chart');
+    }
     finally { setSaving(false); }
   };
 
@@ -61,7 +79,7 @@ export default function BloodPressurePage() {
 
       <div className="bp-page__content">
         {tab === 'input' && (
-          <BpInput onSubmit={handleSubmit} loading={saving || syncing} />
+          <BpInput onSubmit={handleSubmit} loading={saving || syncing} notice={saveNotice} />
         )}
         {tab === 'chart' && (
           <>
@@ -83,7 +101,6 @@ export default function BloodPressurePage() {
             tokens={tokens} login={login} logout={logout}
             spreadsheetId={spreadsheetId}
             onSync={syncWithSheets}
-            onUploadLocal={uploadLocalToSheets}
             onCreateSheet={createSpreadsheet}
             syncing={syncing} syncError={syncError} syncOk={syncOk}
             hasUnsynced={hasUnsynced}
