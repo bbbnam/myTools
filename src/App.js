@@ -12,9 +12,9 @@ export default function App() {
         {/* 홈 (메뉴 허브) */}
         <Route path="/" element={<HomePage />} />
 
-        {/* routes.js에 등록된 메뉴들 자동 렌더링 */}
+        {/* routes.js에 등록된 메뉴들 자동 렌더링 (외부 링크는 내부 라우트 없음) */}
         {routes.map(route =>
-          route.enabled ? (
+          route.enabled && !route.external ? (
             <Route
               key={route.id}
               path={route.path}
