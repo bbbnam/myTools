@@ -7,6 +7,7 @@ import LedBoardPage      from './pages/LedBoardPage';
 import BloodPressurePage from './pages/BloodPressurePage';
 import TemplateMemoPage  from './pages/TemplateMemoPage';
 
+// 외부 링크 메뉴는 component/path 대신 external:true + href 를 사용합니다.
 export const routes = [
   {
     id: 'led-board',
@@ -33,6 +34,15 @@ export const routes = [
     icon: '📝',
     description: '템플릿 기반 다이어리 메모와 검색/달력 조회',
     component: TemplateMemoPage,
+    enabled: true,
+  },
+  {
+    id: 'learnkit',
+    label: '학습',
+    icon: '📚',
+    description: '언어 학습 · 회화 · 퀴즈 (LearnKit)',
+    external: true,
+    href: 'https://learnkit-wine.vercel.app/',
     enabled: true,
   },
 ];

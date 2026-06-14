@@ -9,16 +9,29 @@ export default function BottomNav() {
   return (
     <nav className="bottom-nav">
       {enabledRoutes.map(route => (
-        <NavLink
-          key={route.id}
-          to={route.path}
-          className={({ isActive }) =>
-            `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`
-          }
-        >
-          <span className="bottom-nav__icon">{route.icon}</span>
-          <span className="bottom-nav__label">{route.label}</span>
-        </NavLink>
+        route.external ? (
+          <a
+            key={route.id}
+            href={route.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bottom-nav__item"
+          >
+            <span className="bottom-nav__icon">{route.icon}</span>
+            <span className="bottom-nav__label">{route.label}</span>
+          </a>
+        ) : (
+          <NavLink
+            key={route.id}
+            to={route.path}
+            className={({ isActive }) =>
+              `bottom-nav__item ${isActive ? 'bottom-nav__item--active' : ''}`
+            }
+          >
+            <span className="bottom-nav__icon">{route.icon}</span>
+            <span className="bottom-nav__label">{route.label}</span>
+          </NavLink>
+        )
       ))}
     </nav>
   );

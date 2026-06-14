@@ -14,14 +14,25 @@ export default function HomePage() {
       <div className="home-page__grid">
         {routes.map(route => (
           route.enabled ? (
-            <Link key={route.id} to={route.path} className="menu-card">
-              <span className="menu-card__icon">{route.icon}</span>
-              <div>
-                <div className="menu-card__label">{route.label}</div>
-                <div className="menu-card__desc">{route.description}</div>
-              </div>
-              <span className="menu-card__arrow">→</span>
-            </Link>
+            route.external ? (
+              <a key={route.id} href={route.href} target="_blank" rel="noopener noreferrer" className="menu-card">
+                <span className="menu-card__icon">{route.icon}</span>
+                <div>
+                  <div className="menu-card__label">{route.label}</div>
+                  <div className="menu-card__desc">{route.description}</div>
+                </div>
+                <span className="menu-card__arrow">↗</span>
+              </a>
+            ) : (
+              <Link key={route.id} to={route.path} className="menu-card">
+                <span className="menu-card__icon">{route.icon}</span>
+                <div>
+                  <div className="menu-card__label">{route.label}</div>
+                  <div className="menu-card__desc">{route.description}</div>
+                </div>
+                <span className="menu-card__arrow">→</span>
+              </Link>
+            )
           ) : (
             <div key={route.id} className="menu-card menu-card--disabled">
               <span className="menu-card__icon">{route.icon}</span>
