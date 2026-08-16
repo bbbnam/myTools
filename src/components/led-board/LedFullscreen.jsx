@@ -6,6 +6,7 @@ import './LedFullscreen.css';
 const HINT_DURATION = 3000;
 // 세로 화면은 꽉 채우면 답답해서 여백을 남긴다 (가로는 한 줄이라 꽉 채워도 잘 읽힘)
 const PORTRAIT_SCALE = 0.85;
+const WRAP_CLASS = 'led-fullscreen__text--wrap';
 
 // 우리가 직접 되돌린 history.back()이 만든 popstate는 무시해야 한다.
 // (StrictMode 이중 마운트, 닫자마자 다시 열기 등에서 스스로 닫히는 것을 막는다)
@@ -22,8 +23,7 @@ function FullscreenView({ onClose, text, colorId, speedId, fontId, isScrolling }
   const stageRef     = useRef(null);
   const textRef      = useRef(null);
 
-  const [isLandscape, setIsLandscape] = useState(false);
-  const [showHint,    setShowHint]    = useState(true);
+  const [showHint, setShowHint] = useState(true);
 
   const color = LED_COLORS.find(c => c.id === colorId) || LED_COLORS[0];
   const speed = SPEEDS.find(s => s.id === speedId)     || SPEEDS[1];
@@ -33,17 +33,19 @@ function FullscreenView({ onClose, text, colorId, speedId, fontId, isScrolling }
   const scrollText  = rawText.replace(/\n+/g, '   ·   ');
   const staticLines = rawText.split('\n');
 
-  // 세로 화면은 줄바꿈 허용, 가로 화면은 한 줄 유지
-  const wrapText = !isScrolling && !isLandscape;
-
-  // 전체화면에서는 글자 크기 설정 대신 화면에 꽉 차는 최대 크기를 계산해서 쓴다
-  const fittedSize = useAutoFitFontSize({
+  // 전체화면에서는 글자 크기 설정 대신 화면에 꽉 차는 최대 크기를 계산해서 쓴다.
+  // 방향 판정도 훅이 실제 화면 크기로 하므로 회전 순서와 무관하게 일관된다.
+  const { fontSize: fittedSize, isLandscape } = useAutoFitFontSize({
     containerRef: stageRef,
     textRef,
-    mode: isScrolling ? 'height' : 'both',
-    scale: wrapText ? PORTRAIT_SCALE : 1,
-    signature: `${rawText}|${fontId}|${isScrolling}|${isLandscape}`,
+    isScrolling,
+    portraitScale: PORTRAIT_SCALE,
+    wrapClass: WRAP_CLASS,
+    signature: `${rawText}|${fontId}|${isScrolling}`,
   });
+
+  // 세로 화면은 줄바꿈 허용, 가로 화면은 한 줄 유지
+  const wrapText = !isScrolling && !isLandscape;
 
   // 네이티브 전체화면 요청
   useEffect(() => {
@@ -58,23 +60,6 @@ function FullscreenView({ onClose, text, colorId, speedId, fontId, isScrolling }
         (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
       }
     };
-  }, []);
-
-  // 화면 비율로 가로/세로 판정 (기기 회전뿐 아니라 창 크기 변화도 반영)
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return undefined;
-
-    const update = () => setIsLandscape(stage.clientWidth > stage.clientHeight);
-    update();
-
-    if (typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', update);
-      return () => window.removeEventListener('resize', update);
-    }
-    const ro = new ResizeObserver(update);
-    ro.observe(stage);
-    return () => ro.disconnect();
   }, []);
 
   useEffect(() => {
@@ -141,7 +126,7 @@ function FullscreenView({ onClose, text, colorId, speedId, fontId, isScrolling }
         ) : (
           <div
             ref={textRef}
-            className={`led-fullscreen__text${wrapText ? ' led-fullscreen__text--wrap' : ''}`}
+            className={`led-fullscreen__text${wrapText ? ` ${WRAP_CLASS}` : ''}`}
             style={textStyle}
           >
             {staticLines.map((line, i) => (
