@@ -55,11 +55,13 @@
   white-space: pre;
 }
 
-/* 세로 화면: 창 폭에 맞춰 자동 줄바꿈 */
+/* 세로 화면: 창 폭에 맞춰 자동 줄바꿈.
+   띄어쓰기 단위로만 끊고(keep-all), 단어 하나가 폭을 넘을 때만 예외로 쪼갠다 */
 .led-fullscreen__text--wrap {
   white-space: pre-wrap;
-  word-break: break-word;
+  word-break: keep-all;
   overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 
 .led-fullscreen__ticker {

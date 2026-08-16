@@ -14,9 +14,10 @@ const MIN_VISIBLE_CHARS = 3;
  * @param textRef      크기를 맞출 텍스트 엘리먼트 (컨테이너 폭을 채우는 블록이어야 함)
  * @param mode         'both'   폭·높이 모두 맞춤 (정지 모드)
  *                     'height' 높이만 맞춤 (스크롤 모드 — 가로로 흘러가므로 폭은 무의미)
+ * @param scale        맞춘 크기에 곱할 비율. 1이면 화면에 꽉 차고, 작을수록 여백이 생긴다.
  * @param signature    바뀌면 다시 측정할 값들을 이어붙인 문자열 (텍스트, 폰트, 방향 등)
  */
-export function useAutoFitFontSize({ containerRef, textRef, mode = 'both', signature = '' }) {
+export function useAutoFitFontSize({ containerRef, textRef, mode = 'both', scale = 1, signature = '' }) {
   const [fontSize, setFontSize] = useState(null);
 
   const measure = useCallback(() => {
@@ -54,8 +55,8 @@ export function useAutoFitFontSize({ containerRef, textRef, mode = 'both', signa
     }
 
     el.style.fontSize = prev;
-    setFontSize(Math.max(MIN_PX, Math.floor(lo)));
-  }, [containerRef, textRef, mode]);
+    setFontSize(Math.max(MIN_PX, Math.floor(lo * scale)));
+  }, [containerRef, textRef, mode, scale]);
 
   // 텍스트·폰트·방향이 바뀌면 화면에 그려지기 전에 다시 측정
   useLayoutEffect(() => {

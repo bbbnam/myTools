@@ -4,6 +4,8 @@ import { useAutoFitFontSize } from '../../hooks/useAutoFitFontSize';
 import './LedFullscreen.css';
 
 const HINT_DURATION = 3000;
+// 세로 화면은 꽉 채우면 답답해서 여백을 남긴다 (가로는 한 줄이라 꽉 채워도 잘 읽힘)
+const PORTRAIT_SCALE = 0.85;
 
 // 우리가 직접 되돌린 history.back()이 만든 popstate는 무시해야 한다.
 // (StrictMode 이중 마운트, 닫자마자 다시 열기 등에서 스스로 닫히는 것을 막는다)
@@ -39,6 +41,7 @@ function FullscreenView({ onClose, text, colorId, speedId, fontId, isScrolling }
     containerRef: stageRef,
     textRef,
     mode: isScrolling ? 'height' : 'both',
+    scale: wrapText ? PORTRAIT_SCALE : 1,
     signature: `${rawText}|${fontId}|${isScrolling}|${isLandscape}`,
   });
 
