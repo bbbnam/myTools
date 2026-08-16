@@ -1,13 +1,13 @@
 .led-fullscreen {
   position: fixed;
   inset: 0;
+  /* 모바일 주소창 노출/숨김에 따라 높이가 흔들리지 않도록 */
+  height: 100vh;
+  height: 100dvh;
   background: #050505;
   z-index: 999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   animation: fs-in 200ms ease forwards;
+  cursor: pointer;
 }
 
 @keyframes fs-in {
@@ -31,24 +31,35 @@
   z-index: 1;
 }
 
+/* 화면 전체를 차지해야 텍스트가 정중앙에 온다 */
 .led-fullscreen__stage {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  width: 100%;
-  flex: 1;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 글자 주변 발광이 화면 끝에서 잘리지 않도록 최소 여백만 남긴다 */
+  padding: 2vmin;
 }
 
 .led-fullscreen__text {
+  width: 100%;
+  min-width: 0;
   text-align: center;
   font-weight: 700;
   letter-spacing: 0.05em;
   line-height: 1.2;
+  /* 가로 화면: 줄바꿈 없이 한 줄 */
   white-space: pre;
-  padding: 0 24px;
+}
+
+/* 세로 화면: 창 폭에 맞춰 자동 줄바꿈 */
+.led-fullscreen__text--wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .led-fullscreen__ticker {
@@ -56,6 +67,7 @@
   white-space: nowrap;
   font-weight: 700;
   letter-spacing: 0.05em;
+  line-height: 1.2;
   animation: fs-scroll linear infinite;
   will-change: transform;
   position: relative;
@@ -67,21 +79,23 @@
   100% { transform: translateX(-100%); }
 }
 
-.led-fullscreen__close {
-  position: relative;
-  z-index: 2;
-  padding: 12px 36px;
-  margin-bottom: 32px;
-  border-radius: 24px;
-  border: 1px solid rgba(255,255,255,0.2);
-  color: rgba(255,255,255,0.45);
-  font-size: 14px;
+.led-fullscreen__hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  z-index: 3;
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
   letter-spacing: 0.08em;
-  transition: all 150ms ease;
-  background: transparent;
+  pointer-events: none;
+  animation: fs-hint 3000ms ease forwards;
 }
 
-.led-fullscreen__close:active {
-  color: #fff;
-  border-color: rgba(255,255,255,0.6);
+@keyframes fs-hint {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
 }
