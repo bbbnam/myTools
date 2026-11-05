@@ -45,4 +45,13 @@ export const routes = [
     href: 'https://learnkit-wine.vercel.app/',
     enabled: true,
   },
+  {
+    id: 'colorplay',
+    label: '색칠 친구들',
+    icon: '🎨',
+    description: '색칠한 캐릭터가 큰 화면에서 3D로 움직여요 (colorplay)',
+    external: true,
+    href: 'https://colorplay-gteo.vercel.app/',
+    enabled: true,
+  },
 ];
