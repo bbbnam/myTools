@@ -209,8 +209,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
     <div class="sub">TEN MINUTES TO CHECKOUT</div>
     <p>알람을 못 들었다. 지금은 오전 10시 48분.<br>체크아웃은 11시. 카드키랑 여권은 어디 뒀더라?</p>
     <ul>
-      <li><b>이동</b> WASD · 방향키 · 바닥 클릭</li>
-      <li><b>조사</b> E · Space · 물건 클릭</li>
+      <li><b>이동</b> 바닥 탭 · 누른 채 끌기 · WASD</li>
+      <li><b>조사</b> 물건을 탭 · E · Space</li>
       <li><b>힌트</b> 오른쪽 위 💡 (막히면)</li>
     </ul>
     <div class="rankrow"><button class="btn" id="startBtn">시작</button><button class="btn ghost" id="rankOpen" hidden>🏆 랭킹</button></div>
@@ -547,18 +547,20 @@ function mkBathroom(G){const g=new THREE.Group();G.add(g);
   box(g,3.8,0,1.25,2.4,2.2,.08,'#cfd4d4');box(g,2.6,0,1.67,.08,2.2,.85,'#cfd4d4');
   block(2.6,5,1.18,1.32);block(2.55,2.67,1.18,2.12);
   // 욕조
-  box(g,4.57,0,2.15,.7,.55,1.5,'#f4f4f2',{r:.3});
-  const water=new THREE.Mesh(new THREE.PlaneGeometry(.56,1.36),mat('#3a5a6a',{r:.1,mt:.2,tr:1,op:.85}));water.rotation.x=-Math.PI/2;water.position.set(4.57,.42,2.15);g.add(water);
-  cyl(g,4.57,.55,1.5,.02,.25,'#c8c8c8',{mt:.8});
+  const tub=new THREE.Group();g.add(tub);
+  box(tub,4.57,0,2.15,.7,.55,1.5,'#f4f4f2',{r:.3});
+  const water=new THREE.Mesh(new THREE.PlaneGeometry(.56,1.36),mat('#3a5a6a',{r:.1,mt:.2,tr:1,op:.85}));water.rotation.x=-Math.PI/2;water.position.set(4.57,.42,2.15);tub.add(water);
+  cyl(tub,4.57,.55,1.5,.02,.25,'#c8c8c8',{mt:.8});
   block(4.2,5,1.3,3);
   // 세면대 + 작은 거울
-  box(g,3.2,0,1.5,.55,.8,.42,'#e8e8e6');cyl(g,3.2,.8,1.5,.16,.04,'#ffffff');
+  const sink=new THREE.Group();g.add(sink);
+  box(sink,3.2,0,1.5,.55,.8,.42,'#e8e8e6');cyl(sink,3.2,.8,1.5,.16,.04,'#ffffff');
   const sm=canvasTex(128,128,(x,w,h)=>{x.fillStyle='#b8c8cc';x.fillRect(0,0,w,h);x.fillStyle='rgba(255,255,255,.75)';x.fillRect(0,0,w,h);
     x.globalCompositeOperation='destination-out';x.font='bold 30px "Do Hyeon",sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('도와줘',w/2,h/2+4);x.globalCompositeOperation='source-over'});
-  const mback=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({color:'#7f9aa2'}));mback.position.set(3.2,1.55,1.295);g.add(mback);
-  const mfog=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:sm,transparent:true}));mfog.position.set(3.2,1.55,1.3);g.add(mfog);
+  const mback=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({color:'#7f9aa2'}));mback.position.set(3.2,1.55,1.295);sink.add(mback);
+  const mfog=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:sm,transparent:true}));mfog.position.set(3.2,1.55,1.3);sink.add(mfog);
   block(2.9,3.5,1.25,1.75);
-  return {g,water}}
+  return {g,water,tub,sink}}
 
 /* ================= 소지품·단서 ================= */
 function renderInv(){$('#invTxt').textContent=S.inv.length?S.inv.join(' · '):'없음';$('#inv').classList.toggle('has',S.inv.length>0)}
@@ -660,10 +662,10 @@ function buildRoom2(){const p=PAL;
       if(!piece('rug'))return say(['러그 밑엔 이제 아무것도 없다.']);
       R.rug.rotation.z=.12;R.rug.position.x+=.15;
       say(['러그 한쪽이 불룩하다. 들춰 봤다.','신문 조각이 깔려 있다. 누가 일부러 숨긴 것 같다.'],after4)}},
-    {id:'bath',name:'욕조',pos:[3.8,2.4],mk:[4.57,1.1,2.15],objs:[bath.g],act(){
+    {id:'bath',name:'욕조',pos:[3.8,2.4],mk:[4.57,1.1,2.15],objs:[bath.tub],act(){
       if(!piece('bath'))return say(['욕조에 찬물이 반쯤 차 있다.','…누가 받아 놓은 거지.']);
       say(['욕조에 물이 반쯤 차 있다. 얼음처럼 차갑다.','물 위에 종이가 떠 있다. 건져 냈다.','젖어서 번졌지만 읽을 수는 있겠다. 신문 조각이다.'],after4)}},
-    {id:'sink',name:'세면대',pos:[3.2,2.05],mk:[3.2,1.95,1.5],objs:[],act(){addClue('help');say(['세면대 거울에 김이 서려 있다.','손가락으로 쓴 글씨가 남아 있다.','『도와줘』'],()=>sfx.sting())}},
+    {id:'sink',name:'세면대',pos:[3.2,2.05],mk:[3.2,1.95,1.5],objs:[bath.sink],act(){addClue('help');say(['세면대 거울에 김이 서려 있다.','손가락으로 쓴 글씨가 남아 있다.','『도와줘』'],()=>sfx.sting())}},
     {id:'con',name:'연결문',pos:[3.6,-2.3],mk:[3.6,2.5,-2.85],objs:[con.g],act(){
       if(!RS.p_con){piece('con');R.conPaper.visible=false;addClue('note708');
         return say(['옆방 708호로 통하는 연결문. 잠겨 있다.','문 틈 아래로 종이 두 장이 밀려 들어와 있다.','하나는 신문 조각.','다른 하나는 쪽지. 『그 직원 또 마스터키로 들어왔어요. 조심하세요.』','…그 직원?'],after4)}
@@ -937,12 +939,27 @@ $('#dlg').addEventListener('click',advance);
 $('#act').addEventListener('click',()=>interact(nearHot()));
 
 const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
-$('#c').addEventListener('pointerdown',e=>{ac();if(!$('#dlg').hidden){advance();return}if(busy())return;
-  mouse.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(mouse,cam);
+// 탭: 누른 물건으로 걸어가서 바로 조사 / 바닥이면 그 자리로 이동
+// 누른 채 끌기: 손가락(마우스) 쪽으로 계속 걷는다
+let PD=null;
+function setRay(cx,cy){mouse.set(cx/innerWidth*2-1,-(cy/innerHeight)*2+1);ray.setFromCamera(mouse,cam)}
+function goTo(h){if(Math.hypot(h.pos[0]-P.x,h.pos[1]-P.z)<1.1){interact(h);return}const p=findPath(h.pos[0],h.pos[1]);if(p){P.path=p;P.pending=h;showRing(h.pos[0],h.pos[1])}}
+function tapAt(cx,cy){setRay(cx,cy);
   const objs=HOT.flatMap(h=>h.objs).filter(Boolean).concat(HOT.filter(h=>h.marker.visible).map(h=>h.marker));
   for(const hit of ray.intersectObjects(objs,true)){let o=hit.object,h=HOT.find(x=>x.marker===o);while(!h&&o){h=o.userData.hot;o=o.parent}
-    if(h&&HOT.includes(h)){if(Math.hypot(h.pos[0]-P.x,h.pos[1]-P.z)<1.1){interact(h);return}const p=findPath(h.pos[0],h.pos[1]);if(p){P.path=p;P.pending=h;showRing(h.pos[0],h.pos[1])}return}}
-  const f=ray.intersectObject(floor)[0];if(f){const p=findPath(f.point.x,f.point.z);if(p){P.path=p;P.pending=null;showRing(f.point.x,f.point.z)}}});
+    if(h&&HOT.includes(h)){goTo(h);return}}
+  const f=ray.intersectObject(floor)[0];if(!f)return;
+  // 물건 바로 앞 바닥을 눌러도 그 물건으로 친다 (작은 물건을 손가락으로 맞히기 어려워서)
+  let best=null,bd=.6;HOT.forEach(h=>{const d=Math.hypot(h.mk[0]-f.point.x,h.mk[2]-f.point.z);if(d<bd){bd=d;best=h}});
+  if(best){goTo(best);return}
+  const p=findPath(f.point.x,f.point.z);if(p){P.path=p;P.pending=null;showRing(f.point.x,f.point.z)}}
+$('#c').addEventListener('pointerdown',e=>{ac();if(!$('#dlg').hidden){advance();return}if(busy())return;
+  PD={id:e.pointerId,x:e.clientX,y:e.clientY,drag:false};try{$('#c').setPointerCapture(e.pointerId)}catch(_){}});
+$('#c').addEventListener('pointermove',e=>{if(!PD||e.pointerId!==PD.id)return;
+  if(!PD.drag&&Math.hypot(e.clientX-PD.x,e.clientY-PD.y)>14){PD.drag=true;P.path=null;P.pending=null}
+  if(PD.drag){setRay(e.clientX,e.clientY);const f=ray.intersectObject(floor)[0];if(f)P.drag=[f.point.x,f.point.z]}});
+$('#c').addEventListener('pointerup',e=>{if(!PD||e.pointerId!==PD.id)return;const was=PD;PD=null;P.drag=null;if(!was.drag&&!busy())tapAt(was.x,was.y)});
+$('#c').addEventListener('pointercancel',()=>{PD=null;P.drag=null});
 function showRing(x,z){ring.position.x=x;ring.position.z=z;ring.material.opacity=1;ring.scale.setScalar(1)}
 
 function reset(){$('#rankBox').innerHTML='';Object.assign(S,{clearSec:0,submitted:false,done:false,t0:performance.now(),seen:new Set(),hintsUsed:0,inv:[],clues:[],route:null});
@@ -960,6 +977,7 @@ function stepPlayer(dt){
   const lock=busy()||S.done;let vx=0,vz=0;
   let mx=0,mz=0;if(!lock){if(K.KeyA||K.ArrowLeft)mx--;if(K.KeyD||K.ArrowRight)mx++;if(K.KeyW||K.ArrowUp)mz--;if(K.KeyS||K.ArrowDown)mz++}
   if(mx||mz){P.path=null;P.pending=null;vx=-FWD.y*mx-FWD.x*mz;vz=FWD.x*mx-FWD.y*mz}
+  else if(P.drag&&!lock){const dx=P.drag[0]-P.x,dz=P.drag[1]-P.z;if(Math.hypot(dx,dz)>.2){vx=dx;vz=dz}}
   else if(P.path&&!lock){let w=P.path[0];while(w&&Math.hypot(w[0]-P.x,w[1]-P.z)<.1){P.path.shift();w=P.path[0]}
     if(!w){const h=P.pending;P.path=null;P.pending=null;if(h)interact(h)}else{vx=w[0]-P.x;vz=w[1]-P.z}}
   const len=Math.hypot(vx,vz);let moved=0;
@@ -1094,7 +1112,7 @@ function buildRoom3(){const p={...PAL,sheet:'#e8dcc0',accent:'#8a4a3a',white:'#f
 function buildRoom4(){const p={...PAL,sheet:'#d8ccc4',accent:'#6a3a3a',white:'#e8e0d8'};
   const b=at(.5,.5,g=>mkBed(g,p,{accent:'#6a3a3a'}));
   const st=at(.1,.5,g=>{const r=mkStand(g,p);r.ph=mkPhone(g,-3.25,.55,-2.5);return r});R.phone=st.ph;
-  at(-.7,.5,g=>mkDesk(g,p));at(-.7,.5,g=>mkMirror(g));
+  const desk=at(-.7,.5,g=>mkDesk(g,p));at(-.7,.5,g=>mkMirror(g));
   R.alarm=mkCOAlarm(RG,.4,-2.5);
   R.bag=mkBag(RG,1.6,1.5,-.3,p.bag);
   R.deskPapers=box(RG,1.9,.775,-2.15,.32,.006,.24,'#f4f0e4',{cast:false});R.deskPapers.visible=false;
@@ -1103,7 +1121,7 @@ function buildRoom4(){const p={...PAL,sheet:'#d8ccc4',accent:'#6a3a3a',white:'#e
     {id:'phone',name:'전화',pos:[-3.15,-1.45],mk:[-3.15,1.35,-2.2],objs:[st.stand],act(){if(RS.called)return say(['수화기 너머엔 신호음뿐이다.']);phoneCall()}},
     {id:'bed',name:'침대',pos:[.35,-.9],mk:[-1.0,1.15,-1.3],objs:[b.bed],act:()=>say(['이불이 사람 모양으로 눌려 있다.','…3년 전 그날 밤, 여기 누가 누워 있었다.'])},
     {id:'alarm',name:'경보기',pos:[.3,-1.2],mk:[.4,2.95,-2.35],objs:[R.alarm],act(){addClue('alarm');say(['여기도 경보기 배터리 칸이 비어 있다.','…3년 전 그 밤에도 이랬겠지.'])}},
-    {id:'desk',name:'책상 서랍',pos:[2.3,-1.45],mk:[2.1,1.3,-2.2],objs:[],act(){
+    {id:'desk',name:'책상 서랍',pos:[2.3,-1.45],mk:[2.1,1.3,-2.2],objs:[desk],act(){
       if(RS.log)return say(['업무일지와 견적서. 다시 봐도 손이 떨린다.']);
       if(!RS.called){sfx.err();return say(['서랍이 뻑뻑해서 안 열린다.'])}
       RS.log=true;R.deskPapers.visible=true;sfx.paper();addInv('업무일지');addInv('견적서');updateGoal();
