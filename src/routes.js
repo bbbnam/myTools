@@ -6,6 +6,7 @@
 import LedBoardPage      from './pages/LedBoardPage';
 import BloodPressurePage from './pages/BloodPressurePage';
 import TemplateMemoPage  from './pages/TemplateMemoPage';
+import EscapeGamePage    from './pages/EscapeGamePage';
 
 // 외부 링크 메뉴는 component/path 대신 external:true + href 를 사용합니다.
 export const routes = [
@@ -34,6 +35,15 @@ export const routes = [
     icon: '📝',
     description: '템플릿 기반 다이어리 메모와 검색/달력 조회',
     component: TemplateMemoPage,
+    enabled: true,
+  },
+  {
+    id: 'escape707',
+    path: '/escape',
+    label: '체크아웃 10분 전',
+    icon: '🏨',
+    description: '호텔 707호 방탈출 추리 게임 · 탈출 시간 랭킹',
+    component: EscapeGamePage,
     enabled: true,
   },
   {
