@@ -267,7 +267,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 <div id="shop" class="overlay" hidden>
   <div class="card shopcard">
     <h1>상점</h1>
-    <p class="demo">결제는 힌트에만 있어요. 모자는 탈출할 때 받는 🪙 코인으로 사요.<br>(데모: 실제 결제는 되지 않아요)</p>
+    <p class="demo">모든 아이템은 방을 탈출할 때 받는 🪙 코인으로 사요.<br>빨리, 힌트 없이 탈출할수록 코인을 더 받아요.</p>
     <div id="shopList"></div>
     <button class="btn ghost close" id="shopClose">닫기</button>
   </div>
@@ -849,22 +849,21 @@ function hintFor(){const r=RS;
   return '기사 속 사망 추정 시각, 새벽 4시 10분. 금고는 0410.'}
 function updateHintBtn(){$('#hintBtn').textContent=`💡 힌트 ${SAVE.hints}`}
 $('#hintBtn').onclick=()=>{ac();if(busy())return;
-  if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 살 수 있어요.',false);return}
+  if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 코인으로 살 수 있어요.',false);return}
   SAVE.hints--;S.hintsUsed++;RS.hintUsed=true;persist();updateHintBtn();sfx.coin();say(['💡 '+hintFor()])};
 
 /* ================= 상점 (데모 결제) ================= */
 const ITEMS=[
-  {id:'hint1',kind:'hint',n:1,ico:'💡',name:'힌트 1개',desc:'막힐 때 다음 할 일을 알려줘요',price:500},
-  {id:'hint3',kind:'hint',n:3,ico:'💡',name:'힌트 3개권',desc:'1개씩 사는 것보다 저렴해요',price:1100},
-  {id:'bellboy',kind:'hat',ico:'🎩',name:'벨보이 모자',desc:'707호 전담 벨보이',coins:150},
-  {id:'straw',kind:'hat',ico:'👒',name:'밀짚모자',desc:'체크아웃하면 바로 해변으로',coins:150},
-  {id:'cat',kind:'hat',ico:'🐱',name:'고양이 귀',desc:'꿈속에서도 귀엽게',coins:250}];
+  {id:'hint1',kind:'hint',n:1,ico:'💡',name:'힌트 1개',desc:'막힐 때 다음 할 일을 알려줘요',coins:40},
+  {id:'hint3',kind:'hint',n:3,ico:'💡',name:'힌트 3개 묶음',desc:'1개씩 사는 것보다 저렴해요',coins:100},
+  {id:'bellboy',kind:'hat',ico:'🎩',name:'벨보이 모자',desc:'707호 전담 벨보이',coins:800},
+  {id:'straw',kind:'hat',ico:'👒',name:'밀짚모자',desc:'체크아웃하면 바로 해변으로',coins:800},
+  {id:'cat',kind:'hat',ico:'🐱',name:'고양이 귀',desc:'꿈속에서도 귀엽게',coins:1500}];
 const won=n=>'₩'+n.toLocaleString('ko-KR');
 function renderShop(){
   $('#shopList').innerHTML=ITEMS.map(it=>{let btn;
     if(it.kind==='hat'&&SAVE.hats.includes(it.id))btn=SAVE.hat===it.id?`<button class="btn sm ghost" data-wear="">벗기</button>`:`<button class="btn sm" data-wear="${it.id}">착용</button>`;
-    else if(it.kind==='hat')btn=`<button class="btn sm${SAVE.coins<it.coins?' ghost':''}" data-buy="${it.id}">🪙 ${it.coins}</button>`;
-    else btn=`<button class="btn sm" data-buy="${it.id}">${won(it.price)}</button>`;
+    else btn=`<button class="btn sm${SAVE.coins<it.coins?' ghost':''}" data-buy="${it.id}">🪙 ${it.coins}</button>`;
     return `<div class="item"><div class="ico">${it.ico}</div><div class="meta"><b>${it.name}</b><small>${it.desc}</small></div>${btn}</div>`}).join('')+`<div class="have">보유 힌트 ${SAVE.hints}개 · 코인 🪙 ${SAVE.coins}</div>`}
 function openShop(){renderShop();$('#shop').hidden=false}
 $('#shopBtn').onclick=()=>{ac();if(!$('#dlg').hidden||fading||event||!$('#lock').hidden||!$('#mg').hidden)return;openShop()};
@@ -872,9 +871,10 @@ $('#shopClose').onclick=()=>{$('#shop').hidden=true};
 $('#shopList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sfx.click();
   if(b.dataset.wear!==undefined){SAVE.hat=b.dataset.wear||null;persist();applyHat();renderShop();return}
   const it=ITEMS.find(i=>i.id===b.dataset.buy);if(!it)return;
-  if(it.kind==='hat'){if(SAVE.coins<it.coins){sfx.err();toast(`코인이 ${it.coins-SAVE.coins}개 모자라요. 방을 탈출하면 받아요.`,false);return}
-    SAVE.coins-=it.coins;SAVE.hats.push(it.id);SAVE.hat=it.id;persist();applyHat();renderCoins();renderShop();sfx.coin();toast(`${it.name} 획득!`);return}
-  openPay(it)});
+  if(SAVE.coins<it.coins){sfx.err();toast(`코인이 ${it.coins-SAVE.coins}개 모자라요. 방을 탈출하면 받아요.`,false);return}
+  SAVE.coins-=it.coins;
+  if(it.kind==='hint'){SAVE.hints+=it.n;updateHintBtn()}else{SAVE.hats.push(it.id);SAVE.hat=it.id;applyHat()}
+  persist();renderCoins();renderShop();sfx.coin();toast(it.kind==='hint'?`힌트 +${it.n}`:`${it.name} 획득!`)});
 let payItem=null;
 function openPay(it){payItem=it;$('#payName').textContent=it.name;$('#payPrice').textContent=won(it.price);const ok=$('#payOk');ok.disabled=false;ok.textContent='결제하기';$('#pay').hidden=false}
 $('#payCancel').onclick=()=>{$('#pay').hidden=true};
@@ -1236,7 +1236,7 @@ function renderDed(){const d=DED[DS.i];$('#dedStep').textContent=`추리 ${DS.i+
   else{const have=S.clues.map(id=>[id,CLUES[id]]);have.forEach(([id,c])=>{const b=document.createElement('button');b.className='opt ev';b.innerHTML=`<b>${c.t}</b><small>${c.d}</small>`;b.onclick=()=>pickDed(d.ev.includes(id));box_.appendChild(b)})}
   $('#dedHint').textContent=`💡 힌트 쓰기 (보유 ${SAVE.hints})`;$('#dedHintTxt').hidden=true}
 function pickDed(ok){sfx.click();DS.ok.push(ok);DS.i++;if(DS.i<DED.length)renderDed();else{$('#ded').hidden=true;finishDed()}}
-$('#dedHint').onclick=()=>{if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 살 수 있어요.',false);return}
+$('#dedHint').onclick=()=>{if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 코인으로 살 수 있어요.',false);return}
   SAVE.hints--;S.hintsUsed++;persist();updateHintBtn();sfx.coin();const t=$('#dedHintTxt');t.textContent='💡 '+DED[DS.i].hint;t.hidden=false;$('#dedHint').textContent=`💡 힌트 쓰기 (보유 ${SAVE.hints})`};
 function finishDed(){const n=DS.ok.filter(Boolean).length;S.dedScore=n;S.route=n===DED.length?'true':'bad';
   const lines=S.route==='true'?['…그래. 가스였어.','3년 전에도, 그리고 지금도.','사장은 알면서 덮었고, 직원은 시키는 대로 배터리를 뺐다.','그리고 나는 지금— 그 방에서 자고 있다.','일어나야 해. 지금 당장.']:['…그래, 그런 거였어.','이제 다 알았으니까. 깨면 끝나.'];
@@ -1308,7 +1308,7 @@ function showEnding(kind){const sec=Math.round((performance.now()-S.t0)/1000);co
     const x=c.getContext('2d'),t0=performance.now();(function f(){const k=Math.min(1,(performance.now()-t0)/3500);x.clearRect(0,0,c.width,c.height);drawPlate(x,c.width,c.height,5,.05+k*.4);if(k<1&&!end.hidden)requestAnimationFrame(f)})();
     $('#endTxt').innerHTML=`문패 끝, 아주 작은 글씨는<br>이번에도 못 봤다.<small>추리 ${S.dedScore}/${DED.length} 맞힘 · 플레이 ${Math.floor(sec/60)}분 ${sec%60}초</small>`;$('#retryBtn').hidden=false;$('#retryBtn').textContent=`추리 다시 하기 (💡 1개)`}
   end.hidden=false}
-$('#retryBtn').onclick=()=>{if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 살 수 있어요.',false);return}
+$('#retryBtn').onclick=()=>{if(SAVE.hints<=0){openShop();toast('힌트가 없어요. 상점에서 코인으로 살 수 있어요.',false);return}
   SAVE.hints--;S.hintsUsed++;persist();updateHintBtn();$('#end').hidden=true;$('#news').hidden=true;$('#fade').style.transitionDuration='0ms';$('#fade').style.background='#000';$('#fade').style.opacity=1;S.done=false;fading=true;openDed()};
 
 /* ================= 랭킹 (구글 로그인 + Firestore, myTools 배포본에서만 켜짐) ================= */
