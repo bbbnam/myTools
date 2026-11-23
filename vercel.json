@@ -1,4 +1,9 @@
 {
+  "redirects": [
+    { "source": "/escape", "destination": "https://ten-minutes-to-checkout.vercel.app/", "permanent": true },
+    { "source": "/games/checkout707", "destination": "https://ten-minutes-to-checkout.vercel.app/", "permanent": true },
+    { "source": "/games/checkout707/:path*", "destination": "https://ten-minutes-to-checkout.vercel.app/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)",     "destination": "/" }
